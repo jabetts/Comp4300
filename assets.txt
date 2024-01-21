@@ -1,0 +1,7 @@
+Texture KnightIdle assets/Heroes/Knight/Idle/Idle-Sheet.png
+Texture KnightRun assets/Heroes/Knight/Run/Run-Sheet.png
+Texture OrcIdle assets/Enemy/OrcCrew/Orc/Idle/Idle-Sheet.png
+Font Hack hack.ttf
+Animation KightRun KnightRun 6 20
+Animation KnightIdle KnightIdle 4 60
+Animation OrcIdle OrcIdle 4 60
