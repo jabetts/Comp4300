@@ -39,7 +39,7 @@ public:
 
 	virtual void doAction(const Action& action);
 	void simulate(const size_t frames);
-	void registerAction(int inputKey, const std::string& actionName);
+	void registerAction(int inputKey, const std::string actionName);
 	void simulate(int i);
 
 	size_t width() const;

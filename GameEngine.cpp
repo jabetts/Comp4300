@@ -82,6 +82,7 @@ void GameEngine::run()
 
 	while (isRunning())
 	{
+		userInput();
 		update();
 		m_sceneMap[m_currentScene]->update();
 	}
