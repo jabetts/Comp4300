@@ -2,10 +2,12 @@
 
 void GameEngine::init(const std::string& path)
 {
+
 	m_assets.loadFromFile(path);
 
 	m_window.create(sf::VideoMode(1280, 768), "Definitley Not Mario");
 	m_window.setFramerateLimit(60);
+	m_window.setVerticalSyncEnabled(true);
 
 	changeScene("menu", std::make_shared<Scene_Menu>(this), true);
 }
@@ -60,6 +62,12 @@ void GameEngine::userInput()
 			const std::string actionType = (event.type == sf::Event::KeyPressed) ? "START" : "END";
 
 			// look up the action and send the action to the scene
+			// to spell out the below: first we can doAction on the current scene
+			// Do action wants an action, so we pass the object contructor and for the action name we select
+			// what is stored at the Key's index and the actionType of start of end
+			// the contructed action object then get passed to doAction which will have a switch or
+			// if statements based on the action.type and then action.name
+
 			currentScene()->doAction(Action(currentScene()->getActionMap().at(event.key.code), actionType));
 		}
 	}

@@ -23,7 +23,9 @@ void Scene_Play::init(const std::string& levelPath)
 
     registerAction(sf::Keyboard::W,      "JUMP");
     registerAction(sf::Keyboard::A,      "LEFT");
-    registerAction(sf::Keyboard::D, "RIGHT");
+    registerAction(sf::Keyboard::D,      "RIGHT");
+    registerAction(sf::Keyboard::Space,  "SHOOT");
+    registerAction(sf::Keyboard::M,      "ANIM"); // animation debug
 
     // TODO: Register all other gameplay Actions
 
@@ -53,12 +55,12 @@ void Scene_Play::loadLevel(const std::string& filename)
     //
     auto brick = m_entityManager.addEntity("tile");
     // IMPORTANT: always add the CAnimation componenet first so that gridToMidPixel can compute correctly
-    brick->addComponent<CAnimation>(m_game->assets().getAnimation("KnightRun"), true);
+    brick->addComponent<CAnimation>(m_game->assets().getAnimation("KnightIdle"), true);
     brick->addComponent<CTransform>(Vec2(96, 480));
     // NOTE: your final code should position the entitiy with the grid x,y position read from the file:
     //brick->addComponent<CTransform>(gridToMidPixel(gridX, gridY, brick);
 
-    if (brick->getComponent<CAnimation>().animation.getName() == "KnightRun")
+    if (brick->getComponent<CAnimation>().animation.getName() == "KnightIdle")
     {
         std::cout << "This could be a good way of identifing of a tile is a brick!\n";
     }
@@ -68,7 +70,6 @@ void Scene_Play::loadLevel(const std::string& filename)
     block->addComponent<CTransform>(Vec2(224, 480));
     // add a bounding box, this will now show up if we press the 'C' key
     block->addComponent<CBoundingBox>(m_game->assets().getAnimation("KnightRun").getSize());
-    block->addComponent<CTransform>(Vec2(352, 480));
 
     // NOTE: THIS IS INCREDIBLY IMPORTANT PLEASE READ THIS EXAMPLE
     //       Components are now returned as references rather than pointers
@@ -99,14 +100,11 @@ void Scene_Play::spawnPlayer()
 {
     // here is a sample player entity which you can use to constrcut other entities
     m_player = m_entityManager.addEntity("Player");
-    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);
+    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("KnightIdle"), true);
     m_player->addComponent<CTransform>(Vec2(224,352));
     m_player->addComponent<CBoundingBox>(Vec2(48,48));
-
-    // TODO: be sure to add the remaining componenets to the player
     m_player->addComponent<CGravity>(0.1);
-    m_player->getComponent<CAnimation>();
-
+    m_player->addComponent<CInput>();
 }
 
 void Scene_Play::spawnBullet(std::shared_ptr<Entity> entity)
@@ -185,15 +183,28 @@ void Scene_Play::sDoAction(const Action& action)
         else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; }
         else if (action.name() == "PAUSE") { setPaused(!m_paused); }
         else if (action.name() == "QUIT") { onEnd(); }
-        else if (action.name() == "UP")
+        else if (action.name() == "JUMP")
         {
             m_player->getComponent<CInput>().up = true;
+        }
+        // TODO: Remove this and place it in sAnimation once Animation
+        //       class is finished and animations are working
+        //       This is to test step by step
+        else if (action.name() == "ANIM")
+        {
+            for (auto& e : m_entityManager.getEntities())
+            {
+                if (e->hasComponent<CAnimation>())
+                {
+                    e->getComponent<CAnimation>().animation.update();
+                }
+            }
         }
     }
 
     else if (action.type() == "END")
     {
-        if (action.name() == "UP")
+        if (action.name() == "JUMP")
         {
             m_player->getComponent<CInput>().up = false;
         }
@@ -212,6 +223,8 @@ void Scene_Play::sAnimation()
     // TODO: set the animation of the player based on its CState component
     // TODO: for each entity with an animation, call entitiy->getComponent<CAnimation>().animaiton.update()
     //       if the animation is not repeated, and it has ended, destroy the entity
+
+   
 }
 
 void Scene_Play::onEnd()
@@ -226,7 +239,7 @@ void Scene_Play::sRender()
     // 1:17:58 is lecture
     // color the background darker so you know that the game is paused
     if (!m_paused) { m_game->window().clear(sf::Color(100, 100, 255)); }
-    else { m_game->window().clear(sf::Color(sf::Color::Red)); }
+    else { m_game->window().clear(sf::Color(75, 75, 75)); }
 
     // set the viewport of the window to be centered on the player if it's far enough right
     auto& pPos = m_player->getComponent<CTransform>().pos;
@@ -300,6 +313,7 @@ void Scene_Play::sRender()
     }
     
     m_game->window().display();
+    m_currentFrame++;
 }
 
 

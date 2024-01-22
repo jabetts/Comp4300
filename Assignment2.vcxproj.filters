@@ -97,6 +97,8 @@
     <Text Include="config.txt">
       <Filter>Resource Files</Filter>
     </Text>
-    <Text Include="assets.txt" />
+    <Text Include="assets.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

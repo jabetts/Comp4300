@@ -18,6 +18,7 @@ Animation::Animation(const std::string& name, const sf::Texture& t, size_t frame
 	m_sprite.setOrigin(m_size.x / 2.0f, m_size.y / 2.0f);
 	// If the texture is 32x32 scale it up by 2.0
 	m_sprite.setTextureRect(sf::IntRect(std::floor(m_currentFrame) * m_size.x, 0, m_size.x, m_size.y));
+	
 }
 
 // updates the animation to show the next frame, depending on its speed
@@ -26,10 +27,13 @@ void Animation::update()
 {
 	size_t currentSprite;
 	// add the speed variable to the current frame
-	m_currentFrame++;
+	
 
+	m_sprite.setTextureRect(sf::IntRect(std::floor(m_currentFrame) * m_size.x, 0, m_size.x, m_size.y));
 	// TODO: 1) calculate the correct frame of animation to play based on currentFrame and speed
 	//       2) set the texture rectangle property (see constructor for sample)
+
+	m_currentFrame++;
 }
 
 bool Animation::hasEnded() const

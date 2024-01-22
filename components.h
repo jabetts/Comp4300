@@ -41,7 +41,7 @@ struct CLifeSpan : Component
 		: lifespan(duration), frameCreated(frame) {}
 };
 
-struct CInput
+struct CInput : Component
 {
 	bool up		  = false;
 	bool left	  = false;

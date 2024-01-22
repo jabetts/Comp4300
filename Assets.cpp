@@ -45,6 +45,7 @@ Animation& Assets::getAnimation(std::string name)
 
 void Assets::loadFromFile(std::string path)
 {
+	sf::Clock clock;
 	std::ifstream f(path);
 
 	if (!f.is_open())
@@ -53,6 +54,7 @@ void Assets::loadFromFile(std::string path)
 		exit(1);
 	}
 
+	std::cout << "Loading assets:\n";
 	std::string in;
 	std::string p;
 	while (f >> in)
@@ -94,6 +96,8 @@ void Assets::loadFromFile(std::string path)
 			" " << anim.getSize().x << " " << anim.getSize().y << std::endl;
 	}
 
+	int time = clock.getElapsedTime().asMilliseconds();
+	std::cout << "Assets loaded in: " << time << " milliseconds\n";
 
 	f.close();
 

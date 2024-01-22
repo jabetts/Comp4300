@@ -42,10 +42,10 @@ protected:
 	void drawLine(Vec2 vec1, Vec2 vec2);
 
 public:
+	Scene_Play(GameEngine* gameEngine, const std::string& levelPath);
 	void update();
 	void onEnd();
 	void sDoAction(const Action& action);
 	void sRender();
-	Scene_Play(GameEngine* gameEngine, const std::string& levelPath);
 };
 

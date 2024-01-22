@@ -16,10 +16,10 @@ void Scene_Menu::init()
 	m_menuStrings.push_back("Quit");
 
 	m_levelPaths.push_back("level1.txt");
-	m_levelPaths.push_back("level1.txt");
-	m_levelPaths.push_back("level1.txt");
+	m_levelPaths.push_back("level2.txt");
+	m_levelPaths.push_back("level3.txt");
 
-	m_menuText.setFont(m_game->assets().getFont("Hack"));
+	m_menuText.setFont(m_game->assets().getFont("Mario"));
 	m_menuText.setString(m_menuStrings[0]);
 	m_menuText.setCharacterSize(72);
 	m_menuText.setOrigin(sf::Vector2f(0, m_menuText.getCharacterSize() / 2.0));
@@ -94,13 +94,18 @@ void Scene_Menu::sDoAction(const Action& action)
 		}
 		else if (action.name() == "PLAY")
 		{
+			if (m_menuIndex == m_menuStrings.size() - 1) { onEnd(); }
 			m_game->changeScene("play", std::make_shared<Scene_Play>(m_game, m_levelPaths[m_selectedMenuIndex]));
 		}
-		else if (action.name() == "QUIT")
+		if (action.name() == "QUIT")
 		{
 			onEnd();
 		}
+		else if (action.type() == "END")
+		{
+		}
 	}
+
 }
 
 void Scene_Menu::update()
