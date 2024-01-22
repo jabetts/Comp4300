@@ -39,21 +39,28 @@ void GameEngine::userInput()
 				}
 
 			}
+			if (event.key.code == sf::Keyboard::Tab)
+			{
+				if (m_currentScene != "menu")
+				{
+					changeScene("menu", std::make_shared<Scene_Menu>(this), true);
+				}
+			}
 		}
 
 		if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)
 		{
 			// if the current scene does not have an action associated with this key, skip the event
 			if (currentScene()->getActionMap().find(event.key.code) == currentScene()->getActionMap().end())
-			{ continue;}
+			{
+				continue;
+			}
 
 			//detrmine  start or end action by whether it was press or release
 			const std::string actionType = (event.type == sf::Event::KeyPressed) ? "START" : "END";
 
 			// look up the action and send the action to the scene
-			Action act(currentScene()->getActionMap().at(event.key.code), actionType);
-			//currentScene()->doAction(Action(currentScene()->getActionMap().at(event.key.code), actionType));
-			//m_sceneMap[m_currentScene]->doAction(Action(m_sceneMap[m_currentScene]->getActionMap().at(event.key.code), actionType));
+			currentScene()->doAction(Action(currentScene()->getActionMap().at(event.key.code), actionType));
 		}
 	}
 }
@@ -85,11 +92,8 @@ void GameEngine::run()
 
 	while (isRunning())
 	{
-		
 		m_sceneMap[m_currentScene]->update();
-		//update();
-		userInput();
-		
+		userInput();	
 	}
 }
 

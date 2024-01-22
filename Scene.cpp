@@ -23,6 +23,7 @@ Scene::Scene(GameEngine* gameEngine)
 
 void Scene::doAction(const Action& action)
 {
+	sDoAction(action);
 }
 
 void Scene::simulate(const size_t frames)
