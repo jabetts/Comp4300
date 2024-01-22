@@ -13,6 +13,7 @@ void Scene_Menu::init()
 	m_menuStrings.push_back("Level 1");
 	m_menuStrings.push_back("Level 2");
 	m_menuStrings.push_back("Level 3");
+	m_menuStrings.push_back("Quit");
 
 	m_levelPaths.push_back("level1.txt");
 	m_levelPaths.push_back("level1.txt");
@@ -21,13 +22,8 @@ void Scene_Menu::init()
 	m_menuText.setFont(m_game->assets().getFont("Hack"));
 	m_menuText.setString(m_menuStrings[0]);
 	m_menuText.setCharacterSize(72);
-	m_menuText.setOrigin(sf::Vector2f(0, 36));
-
-	//int x = m_game->window().getSize().x;
-	////int y = m_game->window().getSize().y;
-
-	//float pos = y / (m_menuStrings.size() + 1);
-
+	m_menuText.setOrigin(sf::Vector2f(0, m_menuText.getCharacterSize() / 2.0));
+	m_menuText.setFillColor(sf::Color::White);
 	m_menuText.setPosition(sf::Vector2f( 30.0, 0 ));
 
 	update();
@@ -55,10 +51,23 @@ void Scene_Menu::sRender()
 	float textYH = textY / 2.0f;
 	m_menuText.setPosition(sf::Vector2f(50, textYH));
 
-	for (auto s : m_menuStrings)
+	for (size_t i = 0; i < m_menuStrings.size(); i++)
 	{
-		m_menuText.setString(s);
-		m_game->window().draw(m_menuText);
+		m_menuText.setString(m_menuStrings[i]);
+		if (i == m_menuIndex)
+		{
+			m_menuText.setScale(sf::Vector2f(1.3f, 1.3f));
+			float newSpace = m_currentSpace += m_fontSpaceVel;
+			if (newSpace > 5.0) newSpace = 5.0;
+			m_menuText.setLetterSpacing(newSpace);
+			m_game->window().draw(m_menuText);
+		}
+		else
+		{
+			m_menuText.setScale(sf::Vector2f(1.0f, 1.0f));
+			m_menuText.setLetterSpacing(1.0f);
+			m_game->window().draw(m_menuText);
+		}
 		m_menuText.move(sf::Vector2f(0.0f, textY ));
 	}
 
@@ -73,13 +82,15 @@ void Scene_Menu::sDoAction(const Action& action)
 	{
 		if (action.name() == "UP")
 		{
-			if (m_selectedMenuIndex > 0) { m_selectedMenuIndex--; std::cout << "up\n"; }
-			else { m_menuIndex - m_menuStrings.size() - 1; std::cout << "up\n"; }
+			if (m_menuIndex == 0) m_menuIndex = m_menuStrings.size() - 1;
+			else { m_menuIndex--; }
+			m_currentSpace = 1.0f;
 		}
 		else if (action.name() == "DOWN")
 		{
-			m_menuIndex = (m_selectedMenuIndex + 1) % m_menuStrings.size();
-			std::cout << "down\n";
+			if (m_menuIndex == m_menuStrings.size() - 1) m_menuIndex = 0;
+			else { m_menuIndex++; }
+			m_currentSpace = 1.0f;
 		}
 		else if (action.name() == "PLAY")
 		{

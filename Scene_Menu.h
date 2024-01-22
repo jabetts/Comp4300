@@ -16,6 +16,8 @@ protected:
 	sf::Text							m_menuText;
 	size_t								m_selectedMenuIndex = 0;
 	int									m_menuIndex = 0;
+	float								m_fontSpaceVel = 0.1f;
+	float								m_currentSpace = 1.0f;
 
 	void init();
 	void update();
