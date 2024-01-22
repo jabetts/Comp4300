@@ -22,11 +22,13 @@ void Scene_Play::init(const std::string& levelPath)
     registerAction(sf::Keyboard::G,      "TOGGLE_GRID");        // Toggle drawing (G)rid
 
     registerAction(sf::Keyboard::W,      "JUMP");
+    registerAction(sf::Keyboard::A,      "LEFT");
+    registerAction(sf::Keyboard::D, "RIGHT");
 
     // TODO: Register all other gameplay Actions
 
     m_gridText.setCharacterSize(12);
-    //m_gridText.setFont();
+    m_gridText.setFont(m_game->assets().getFont("Hack"));
 
     loadLevel(levelPath);
 }
@@ -97,12 +99,12 @@ void Scene_Play::spawnPlayer()
 {
     // here is a sample player entity which you can use to constrcut other entities
     m_player = m_entityManager.addEntity("Player");
-    //m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);
-    //m_player->addComponent<CTransform>(Vec2(224,352));
-    //m_player->addComponent<CBoundingBox>(Vec2(48,48));
+    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);
+    m_player->addComponent<CTransform>(Vec2(224,352));
+    m_player->addComponent<CBoundingBox>(Vec2(48,48));
 
     // TODO: be sure to add the remaining componenets to the player
-    //m_player->addComponent<CGravity>(0.1);
+    m_player->addComponent<CGravity>(0.1);
     m_player->getComponent<CAnimation>();
 
 }
@@ -178,16 +180,17 @@ void Scene_Play::sDoAction(const Action& action)
 {
     if (action.type() == "START")
     {
-             if (action.name() == "TOGGLE_TEXTURE")   { m_drawTextures = !m_drawTextures; }
+        if (action.name() == "TOGGLE_TEXTURE") { m_drawTextures = !m_drawTextures; }
         else if (action.name() == "TOGGLE_COLLISION") { m_drawCollision = !m_drawCollision; }
-        else if (action.name() == "TOGGLE_GRID")      { m_drawGrid = !m_drawGrid; }
-        else if (action.name() == "PAUSE")            { setPaused(!m_paused); }
-        else if (action.name() == "QUIT")             { onEnd(); }
+        else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; }
+        else if (action.name() == "PAUSE") { setPaused(!m_paused); }
+        else if (action.name() == "QUIT") { onEnd(); }
         else if (action.name() == "UP")
-             {
-                 m_player->getComponent<CInput>().up = true;
-             }
+        {
+            m_player->getComponent<CInput>().up = true;
+        }
     }
+
     else if (action.type() == "END")
     {
         if (action.name() == "UP")
@@ -214,7 +217,7 @@ void Scene_Play::sAnimation()
 void Scene_Play::onEnd()
 {
     // TODO: When the scene ends, change back to the MENU scene
-    //       use m_game->changeScene(correct params);
+    m_game->changeScene("menu", std::make_shared<Scene_Menu>(m_game), false);
 }
 
 void Scene_Play::sRender()
@@ -223,7 +226,7 @@ void Scene_Play::sRender()
     // 1:17:58 is lecture
     // color the background darker so you know that the game is paused
     if (!m_paused) { m_game->window().clear(sf::Color(100, 100, 255)); }
-    else { m_game->window().clear(sf::Color(50, 50, 150)); }
+    else { m_game->window().clear(sf::Color(sf::Color::Red)); }
 
     // set the viewport of the window to be centered on the player if it's far enough right
     auto& pPos = m_player->getComponent<CTransform>().pos;

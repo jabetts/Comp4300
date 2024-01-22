@@ -175,6 +175,7 @@
     <ClInclude Include="vec2.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="assets.txt" />
     <Text Include="config.txt" />
     <Text Include="readme.txt" />
   </ItemGroup>
