@@ -4,9 +4,9 @@ void Scene::simulate(int i)
 {
 }
 
-void Scene::registerAction(Action action)
-{
-}
+//void Scene::registerAction(Action action)
+//{
+//}
 
 void Scene::setPaused(bool paused)
 {
@@ -29,9 +29,9 @@ void Scene::simulate(const size_t frames)
 {
 }
 
-void Scene::registerAction(int inputKey,const std::string actionName)
+void Scene::registerAction(int inputKey,const std::string& actionName)
 {
-	m_actionMap["action"] = inputKey;
+	m_actionMap[inputKey] = actionName;
 }
 
 size_t Scene::width() const

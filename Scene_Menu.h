@@ -20,7 +20,7 @@ protected:
 	void init();
 	void update();
 	void onEnd();
-	void sDoAction(const Action & action);
+	void sDoAction(const Action & action) override;
 
 public:
 

@@ -30,7 +30,6 @@ void Scene_Menu::init()
 
 	m_menuText.setPosition(sf::Vector2f( 30.0, 0 ));
 
-
 	update();
 }
 
@@ -51,7 +50,7 @@ void Scene_Menu::sRender()
 
 	// y = (1080 - 4 * 20) / 6 = 140
 
-	float textY = m_game->window().getSize().y / m_menuStrings.size();
+	float textY = (float)m_game->window().getSize().y / (float)m_menuStrings.size();
 	float textYH = textY / 2.0f;
 	m_menuText.setPosition(sf::Vector2f(50, textYH));
 
@@ -60,8 +59,6 @@ void Scene_Menu::sRender()
 		m_menuText.setString(s);
 		m_game->window().draw(m_menuText);
 		m_menuText.move(sf::Vector2f(0.0f, textY ));
-		//std::cout << s << " " << m_menuText.getPosition().y
-		//	<< " " << m_menuText.getPosition().x << std::endl;
 	}
 
 	m_game->window().display();
@@ -101,5 +98,6 @@ void Scene_Menu::update()
 
 void Scene_Menu::onEnd()
 {
-	m_game->window().close();
+	m_game->quit();
+
 }
