@@ -21,9 +21,10 @@ void Scene_Play::init(const std::string& levelPath)
     registerAction(sf::Keyboard::C,      "TOGGLE_COLLISION");   // Toggle drawing (C)ollision Boxes
     registerAction(sf::Keyboard::G,      "TOGGLE_GRID");        // Toggle drawing (G)rid
 
-    registerAction(sf::Keyboard::W,      "JUMP");
+    registerAction(sf::Keyboard::W,      "UP");
     registerAction(sf::Keyboard::A,      "LEFT");
     registerAction(sf::Keyboard::D,      "RIGHT");
+    registerAction(sf::Keyboard::S,      "DOWN");
     registerAction(sf::Keyboard::Space,  "SHOOT");
     registerAction(sf::Keyboard::M,      "ANIM"); // animation debug
 
@@ -55,12 +56,13 @@ void Scene_Play::loadLevel(const std::string& filename)
     //
     auto brick = m_entityManager.addEntity("tile");
     // IMPORTANT: always add the CAnimation componenet first so that gridToMidPixel can compute correctly
-    brick->addComponent<CAnimation>(m_game->assets().getAnimation("KnightIdle"), true);
+    brick->addComponent<CAnimation>(m_game->assets().getAnimation("Basalt"), true);
     brick->addComponent<CTransform>(Vec2(96, 480));
+    brick->addComponent<CBoundingBox>(m_game->assets().getAnimation("Basalt").getSize());
     // NOTE: your final code should position the entitiy with the grid x,y position read from the file:
     //brick->addComponent<CTransform>(gridToMidPixel(gridX, gridY, brick);
 
-    if (brick->getComponent<CAnimation>().animation.getName() == "KnightIdle")
+    if (brick->getComponent<CAnimation>().animation.getName() == "Basalt")
     {
         std::cout << "This could be a good way of identifing of a tile is a brick!\n";
     }
@@ -132,12 +134,12 @@ void Scene_Play::sMovement()
     // TODO: Implement the maximum player speen in both the X and Y directions
     // NOTE: Setting an entity's scake.x to -1/1 will make it face left right
 
-    Vec2 playerVelocity(0, m_player->getComponent<CTransform>().velocity.y);
+    Vec2 playerVelocity(0, 0);
 
-    if (m_player->getComponent<CInput>().up)
-    {
-        playerVelocity.y = -3;
-    }
+    if (m_player->getComponent<CInput>().up) { playerVelocity.y = -3; }
+    if (m_player->getComponent<CInput>().left) { playerVelocity.x = -3; }
+    if (m_player->getComponent<CInput>().right) { playerVelocity.x = 3; }
+    if (m_player->getComponent<CInput>().down) { playerVelocity.y = 3; }
 
     m_player->getComponent<CTransform>().velocity = playerVelocity;
 
@@ -180,34 +182,22 @@ void Scene_Play::sDoAction(const Action& action)
     {
         if (action.name() == "TOGGLE_TEXTURE") { m_drawTextures = !m_drawTextures; }
         else if (action.name() == "TOGGLE_COLLISION") { m_drawCollision = !m_drawCollision; }
-        else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; }
+        else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; std::cout << "Grid " << (m_drawGrid ? "On\n" : "Off\n"); }
         else if (action.name() == "PAUSE") { setPaused(!m_paused); }
         else if (action.name() == "QUIT") { onEnd(); }
-        else if (action.name() == "JUMP")
-        {
-            m_player->getComponent<CInput>().up = true;
-        }
-        // TODO: Remove this and place it in sAnimation once Animation
-        //       class is finished and animations are working
-        //       This is to test step by step
-        else if (action.name() == "ANIM")
-        {
-            for (auto& e : m_entityManager.getEntities())
-            {
-                if (e->hasComponent<CAnimation>())
-                {
-                    e->getComponent<CAnimation>().animation.update();
-                }
-            }
-        }
+        if (action.name() == "UP") { m_player->getComponent<CInput>().up = true; }
+        if (action.name() == "LEFT") { m_player->getComponent<CInput>().left = true; }
+        if (action.name() == "RIGHT") { m_player->getComponent<CInput>().right = true; }
+        if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
     }
 
     else if (action.type() == "END")
     {
-        if (action.name() == "JUMP")
-        {
-            m_player->getComponent<CInput>().up = false;
-        }
+        if (action.name() == "UP") { m_player->getComponent<CInput>().up = false; }
+        if (action.name() == "LEFT") { m_player->getComponent<CInput>().left = false; }
+        if (action.name() == "RIGHT") { m_player->getComponent<CInput>().right = false; }
+        if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = false; }
+        
     }
 }
 
@@ -223,7 +213,13 @@ void Scene_Play::sAnimation()
     // TODO: set the animation of the player based on its CState component
     // TODO: for each entity with an animation, call entitiy->getComponent<CAnimation>().animaiton.update()
     //       if the animation is not repeated, and it has ended, destroy the entity
-
+    for (auto& e : m_entityManager.getEntities())
+    {
+        if (e->hasComponent<CAnimation>())
+        {
+            e->getComponent<CAnimation>().animation.update();
+        }
+    }
    
 }
 
@@ -290,28 +286,27 @@ void Scene_Play::sRender()
 
     // draw the grid so that students can easily debug
     if (m_drawGrid)
-    {
-        /*
+    {   
+      
         float leftX = m_game->window().getView().getCenter().x - width() / 2;
         float rightX = leftX + width() + m_gridSize.x;
-        float nextGridX = leftX + width() + m_gridSize.x;
+        float nextGridX = leftX - ((int)leftX % (int)m_gridSize.x);
 
         for (float x = nextGridX; x < rightX; x += m_gridSize.x)
         {
-            drawLine(Vec2(leftX, height() - y), Vec2(rightX, height() - y));
+            drawLine(sf::Vector2f(x, 0), sf::Vector2f(x, height()));
 
-            for (float x = nextGridX; x < rightX; x += m_gridSize.x)
+            for (float y = 0; y < height(); y += m_gridSize.y)
             {
+                drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
                 std::string xCell = std::to_string((int)x / (int)m_gridSize.x);
                 std::string yCell = std::to_string((int)y / (int)m_gridSize.y);
                 m_gridText.setString("(" + xCell + "," + yCell + ")");
-                m_gridText.setPosition(x + 3, height() - y - m_gridSize.y + 2);
+                m_gridText.setPosition(x + 3, y + 2);
                 m_game->window().draw(m_gridText);
             }
         }
-        */
     }
-    
     m_game->window().display();
     m_currentFrame++;
 }
@@ -325,9 +320,25 @@ void Scene_Play::sEnemySpawner()
 {
 }
 
-void Scene_Play::drawLine(Vec2 vec1, Vec2 vec2)
+void Scene_Play::drawLine(sf::Vector2f v1, sf::Vector2f v2)
 {
+    sf::VertexArray line(sf::Lines, 2);
+    line[0].position = v1;
+    line[1].position = v2;
+    line[0].color = sf::Color::White;
+    line[1].color = sf::Color::White;
 
+    m_game->window().draw(line);
+}
+
+float Scene_Play::width() const
+{
+    return m_game->window().getSize().x;
+}
+
+float Scene_Play::height() const
+{
+    return m_game->window().getSize().y;
 }
 
 

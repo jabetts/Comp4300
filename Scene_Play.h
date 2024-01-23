@@ -39,7 +39,11 @@ protected:
 
 	void spawnPlayer();
 	void spawnBullet(std::shared_ptr<Entity> entity);
-	void drawLine(Vec2 vec1, Vec2 vec2);
+	void drawLine(sf::Vector2f v1, sf::Vector2f v2);
+
+	float width() const;
+
+	float height() const;
 
 public:
 	Scene_Play(GameEngine* gameEngine, const std::string& levelPath);

@@ -41,9 +41,9 @@ Vec2 Vec2::operator*(const float val) const
 	return Vec2(x * val, y * val);
 }
 
-void Vec2::operator+=(const Vec2& rhs)
+Vec2 Vec2::operator+=(const Vec2& rhs)
 {
-
+	return Vec2(x += rhs.x, y += rhs.y);
 }
 
 void Vec2::operator-=(const Vec2& rhs)

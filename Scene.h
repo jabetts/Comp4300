@@ -42,11 +42,9 @@ public:
 	void registerAction(int inputKey, const std::string& actionName);
 	void simulate(int i);
 
-	size_t width() const;
-	size_t height() const;
 	size_t currentFrame() const;
 
 	bool hasEnded() const;
 	const ActionMap& getActionMap() const;
-	void drawLine(const Vec2& p1, const Vec2& p2);
+	sf::VertexArray drawLine(const sf::Vector2f& p1, const sf::Vector2f& p2);
 };

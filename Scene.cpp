@@ -35,19 +35,9 @@ void Scene::registerAction(int inputKey,const std::string& actionName)
 	m_actionMap[inputKey] = actionName;
 }
 
-size_t Scene::width() const
-{
-	return 64;
-}
-
-size_t Scene::height() const
-{
-	return 64;
-}
-
 size_t Scene::currentFrame() const
 {
-	return 0;
+	return m_currentFrame;
 }
 
 bool Scene::hasEnded() const
@@ -60,6 +50,13 @@ const ActionMap& Scene::getActionMap() const
 	return m_actionMap;
 }
 
-void Scene::drawLine(const Vec2& p1, const Vec2& p2)
+sf::VertexArray Scene::drawLine(const sf::Vector2f& p1, const sf::Vector2f& p2)
 {
+	sf::VertexArray line(sf::Lines, 2);
+	line[0].position = p1;
+	line[1].position = p2;
+	line[0].color = sf::Color::White;
+	line[1].color = sf::Color::White;
+
+	return line;
 }
