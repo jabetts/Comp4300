@@ -102,9 +102,9 @@ void Scene_Play::spawnPlayer()
 {
     // here is a sample player entity which you can use to constrcut other entities
     m_player = m_entityManager.addEntity("Player");
-    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("KnightIdle"), true);
+    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
     m_player->addComponent<CTransform>(Vec2(224,352));
-    m_player->addComponent<CBoundingBox>(Vec2(48,48));
+    m_player->addComponent<CBoundingBox>(m_game->assets().getAnimation("MegamanStand").getSize());
     m_player->addComponent<CGravity>(0.1);
     m_player->addComponent<CInput>();
 }
@@ -131,10 +131,10 @@ void Scene_Play::sMovement()
 {
     // TODO: Implement player movement / jumping based on its CInput componenet
     // TODO: Implement gravity's effect on the player
-    // TODO: Implement the maximum player speen in both the X and Y directions
-    // NOTE: Setting an entity's scake.x to -1/1 will make it face left right
+    // TODO: Implement the maximum player speed in both the X and Y directions
+    // NOTE: Setting an entity's scale.x to -1/1 will make it face left right
 
-    Vec2 playerVelocity(0, 0);
+    Vec2 playerVelocity(0, m_player->getComponent<CTransform>().velocity.y);
 
     if (m_player->getComponent<CInput>().up) { playerVelocity.y = -3; }
     if (m_player->getComponent<CInput>().left) { playerVelocity.x = -3; }
@@ -145,10 +145,21 @@ void Scene_Play::sMovement()
 
     for (auto e : m_entityManager.getEntities())
     {
-        e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
-
-        // if the player is moving faster than max speed in any direction,
-        // set that direction to the players max speed.
+        if (e->hasComponent<CGravity>())
+        {
+            e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
+            e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
+            // if the player is moving faster than max speed in any direction,
+            // set that direction to the players max speed.
+            if (e->getComponent<CTransform>().velocity.y > 9.5)
+            {
+                e->getComponent<CTransform>().velocity.y = 9.5;
+            }
+        }
+        if (e->getComponent<CTransform>().velocity.x < 0)
+        {
+            m_player->getComponent<CTransform>().scale.x = -1.0f;
+        }
     }
 }
 
@@ -185,17 +196,36 @@ void Scene_Play::sDoAction(const Action& action)
         else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; std::cout << "Grid " << (m_drawGrid ? "On\n" : "Off\n"); }
         else if (action.name() == "PAUSE") { setPaused(!m_paused); }
         else if (action.name() == "QUIT") { onEnd(); }
+
+        // player actions
         if (action.name() == "UP") { m_player->getComponent<CInput>().up = true; }
-        if (action.name() == "LEFT") { m_player->getComponent<CInput>().left = true; }
-        if (action.name() == "RIGHT") { m_player->getComponent<CInput>().right = true; }
+        if (action.name() == "LEFT") 
+        {
+            m_player->getComponent<CInput>().left = true;
+            m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
+        }
+        if (action.name() == "RIGHT") 
+        { 
+            m_player->getComponent<CInput>().right = true;
+            m_player->addComponent<CState>().state = "Run";
+            m_player->getComponent<CTransform>().scale.x = 1.0f;
+        }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
     }
 
     else if (action.type() == "END")
     {
         if (action.name() == "UP") { m_player->getComponent<CInput>().up = false; }
-        if (action.name() == "LEFT") { m_player->getComponent<CInput>().left = false; }
-        if (action.name() == "RIGHT") { m_player->getComponent<CInput>().right = false; }
+        if (action.name() == "LEFT")
+        {
+            m_player->getComponent<CInput>().left = false;
+            m_player->addComponent<CState>().state = "Stand";
+        }
+        if (action.name() == "RIGHT")
+        {
+            m_player->getComponent<CInput>().right = false;
+            m_player->addComponent<CState>().state = "Stand";
+        }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = false; }
         
     }
@@ -204,6 +234,15 @@ void Scene_Play::sDoAction(const Action& action)
 void Scene_Play::sAnimation()
 {
     // TODO: Complete the Animation class first
+
+    if (m_player->getComponent<CState>().state == "Run")
+    {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
+    }
+    if (m_player->getComponent<CState>().state == "Stand")
+    {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
+    }
 
     if (m_player->getComponent<CState>().state == "air")
     {

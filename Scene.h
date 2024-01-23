@@ -22,11 +22,8 @@ protected:
 	bool								m_hasEnded = false;
 	bool								m_paused = false;
 	size_t								m_currentFrame = 0;
-
 	virtual void onEnd() = 0;
-	//void registerAction(Action action);
 	void setPaused(bool paused);
-
 
 public:
 

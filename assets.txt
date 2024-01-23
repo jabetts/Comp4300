@@ -2,8 +2,12 @@ Texture KnightIdle assets/Heroes/Knight/Idle/Idle-Sheet.png
 Texture KnightRun assets/Heroes/Knight/Run/Run-Sheet.png
 Texture OrcIdle assets/Enemy/OrcCrew/Orc/Idle/Idle-Sheet.png
 Texture Basalt assets/Tiles/basalt.png
+Texture MegamanStand assets/MegamanStand.png
+Texture MegamanRun assets/MegamanRun.png
 Font Hack assets/hack.ttf
 Font Mario assets/mario.ttf
+Animation MegamanStand MegamanStand 3 60
+Animation MegamanRun MegamanRun 3 8
 Animation KnightRun KnightRun 6 20
 Animation KnightIdle KnightIdle 4 60
 Animation OrcIdle OrcIdle 4 60
