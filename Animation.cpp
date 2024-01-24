@@ -27,7 +27,7 @@ Animation::Animation(const std::string& name, const sf::Texture& t, size_t frame
 // animation loop when it reaches the end
 void Animation::update()
 {
-	m_currentFrame++;
+	
 
 	// TODO: 1) calculate the correct frame of animation to play based on currentFrame and speed
 	//       2) set the texture rectangle property (see constructor for sample)
@@ -48,7 +48,7 @@ void Animation::update()
 
 		m_sprite.setTextureRect(sf::IntRect(std::floor(frame) * m_size.x, 0, m_size.x, m_size.y));
 	}
-
+	m_currentFrame++;
 }
 
 bool Animation::hasEnded() const

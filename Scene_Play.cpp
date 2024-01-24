@@ -38,9 +38,6 @@ void Scene_Play::init(const std::string& levelPath)
 
 void Scene_Play::loadLevel(const std::string& filename)
 {
-    // rest the entity manager every time we load a level
-    m_entityManager = EntityManager();
-
     // TODO: read in the level file and add the appropriate entities
     //       use the PlayerConfig struct m_playerConfig to store player properties
     //       this struct is defined at the top of Scene_Play.h
@@ -48,24 +45,61 @@ void Scene_Play::loadLevel(const std::string& filename)
     // NOTE: all of the code below is sample code which shows you how to
     //       set up and use entities with the new syntax, it should be removed
 
+    sf::Clock clock;
+    // rest the entity manager every time we load a level
+    m_entityManager = EntityManager();
+
+    std::ifstream f(filename);
+    if (!f.is_open())
+    {
+        std::cerr << "Unable to open level file.\n";
+        exit(1);
+    }
+
+    std::cout << "Loading level\n";
+    std::string in;
+    
+    while (f >> in)
+    {
+        if (in == "Tile")
+        {
+            std::string text;
+            int X, Y;
+            f >> text >> X >> Y;
+            auto t = m_entityManager.addEntity("tile");
+            t->addComponent<CAnimation>(m_game->assets().getAnimation(text), true);
+            t->addComponent<CBoundingBox>(m_game->assets().getAnimation("Ground").getSize());
+            t->addComponent<CTransform>(gridToMidPixel(X, Y, t));
+        }
+        else if (in == "Dec")
+        {
+
+        }
+        else if (in == "Player")
+        {
+            f >> m_playerConfig.X >> m_playerConfig.Y >> m_playerConfig.CW
+                >> m_playerConfig.CH >> m_playerConfig.SPEED >> m_playerConfig.JUMP
+                >> m_playerConfig.MAXSPEED >> m_playerConfig.GRAVITY >> m_playerConfig.WEAPON;
+        }
+    }
     spawnPlayer();
 
     // some sample entities
     //
     // 55:44 in lecture
     //
-    auto brick = m_entityManager.addEntity("tile");
+    auto e = m_entityManager.addEntity("tile");
     // IMPORTANT: always add the CAnimation componenet first so that gridToMidPixel can compute correctly
-    brick->addComponent<CAnimation>(m_game->assets().getAnimation("Basalt"), true);
-    brick->addComponent<CTransform>(Vec2(96, 480));
-    brick->addComponent<CBoundingBox>(m_game->assets().getAnimation("Basalt").getSize());
+    //brick->addComponent<CAnimation>(m_game->assets().getAnimation("Ground"), true);
+    //brick->addComponent<CTransform>(Vec2(96, 480));
+    //brick->addComponent<CBoundingBox>(m_game->assets().getAnimation("Ground").getSize());
     // NOTE: your final code should position the entitiy with the grid x,y position read from the file:
     //brick->addComponent<CTransform>(gridToMidPixel(gridX, gridY, brick);
 
-    if (brick->getComponent<CAnimation>().animation.getName() == "Basalt")
-    {
-        std::cout << "This could be a good way of identifing of a tile is a brick!\n";
-    }
+    //if (brick->getComponent<CAnimation>().animation.getName() == "Ground")
+    //{
+    //    std::cout << "This could be a good way of identifing of a tile is a brick!\n";
+    //}
 
     auto block = m_entityManager.addEntity("tile");
     block->addComponent<CAnimation>(m_game->assets().getAnimation("KnightRun"), true);
@@ -85,6 +119,11 @@ void Scene_Play::loadLevel(const std::string& filename)
     //       This will REFERENCE the transform with the variable 'transform2' - it is CORRECT
     //       Now any changes you make to transform2 will be changed inside the entitiy
     //       auto& transform2 = entity->get-><CTransform>()
+
+    if (f.is_open()) { f.close(); }
+
+    int time = clock.getElapsedTime().asMilliseconds();
+    std::cout << "Level loaded in: " << time << " milliseconds\n";
 }
 
 Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity)
@@ -94,8 +133,13 @@ Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity
     //       You must use the Entity's Animation size to position it correctly
     //       The size of the grid width and height is stored in m_gridSize.x and m_gridSize.y
     //       The bottom-left corner of the Animation should align with the bottom left of the grid cell
+    
+    auto size = entity->getComponent<CAnimation>().animation.getSprite().getOrigin();
+    int pixelX = (gridX * (float)m_gridSize.x) + size.x;
+    int pixelY = height() - (gridY * m_gridSize.y) - size.y; // However we need to flip this as tile positions for y are reversed.
 
-    return Vec2(0,0);
+
+    return Vec2(pixelX, pixelY);
 }
 
 void Scene_Play::spawnPlayer()
@@ -103,9 +147,9 @@ void Scene_Play::spawnPlayer()
     // here is a sample player entity which you can use to constrcut other entities
     m_player = m_entityManager.addEntity("Player");
     m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
-    m_player->addComponent<CTransform>(Vec2(224,352));
+    m_player->addComponent<CTransform>(gridToMidPixel(1,1, m_player));
     m_player->addComponent<CBoundingBox>(m_game->assets().getAnimation("MegamanStand").getSize());
-    m_player->addComponent<CGravity>(0.1);
+    m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
     m_player->addComponent<CInput>();
 }
 
@@ -119,7 +163,6 @@ void Scene_Play::update()
     m_entityManager.update();
 
     // TODO: implement pause functionality
-
     sMovement();
     sLifeSpan();
     sCollision();
@@ -134,33 +177,53 @@ void Scene_Play::sMovement()
     // TODO: Implement the maximum player speed in both the X and Y directions
     // NOTE: Setting an entity's scale.x to -1/1 will make it face left right
 
-    Vec2 playerVelocity(0, m_player->getComponent<CTransform>().velocity.y);
+    //Vec2 playerVelocity(0, m_player->getComponent<CTransform>().velocity.y);
+    Vec2 playerVelocity(m_player->getComponent<CTransform>().velocity.x, 0);
 
-    if (m_player->getComponent<CInput>().up) { playerVelocity.y = -3; }
-    if (m_player->getComponent<CInput>().left) { playerVelocity.x = -3; }
-    if (m_player->getComponent<CInput>().right) { playerVelocity.x = 3; }
-    if (m_player->getComponent<CInput>().down) { playerVelocity.y = 3; }
-
+    // player CInput
+    auto& pInput = m_player->getComponent<CInput>();
+    if (pInput.up) { playerVelocity.y = -m_playerConfig.SPEED; }
+    if (pInput.left) { playerVelocity.x = -m_playerConfig.SPEED; }
+    else if (pInput.left == false)
+    {
+        playerVelocity.x = 0;
+    }
+    if (pInput.right) { playerVelocity.x = m_playerConfig.SPEED; }
+    else if (!pInput.right == false)
+    {
+        playerVelocity.x = 0;
+    }
+    if (pInput.down) { playerVelocity.y = 3; }
+ 
     m_player->getComponent<CTransform>().velocity = playerVelocity;
+
+    if (playerVelocity.x == 0 and playerVelocity.y == 0)
+    {
+        m_player->addComponent<CState>().state = "Stand";
+    }
 
     for (auto e : m_entityManager.getEntities())
     {
         if (e->hasComponent<CGravity>())
         {
-            e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
+            // TODO: uncomment gravity when collisions work
+            //e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
             e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
             // if the player is moving faster than max speed in any direction,
             // set that direction to the players max speed.
-            if (e->getComponent<CTransform>().velocity.y > 9.5)
+            if (e->getComponent<CTransform>().velocity.y > m_playerConfig.MAXSPEED)
             {
-                e->getComponent<CTransform>().velocity.y = 9.5;
+                e->getComponent<CTransform>().velocity.y = m_playerConfig.MAXSPEED;
             }
         }
+        
         if (e->getComponent<CTransform>().velocity.x < 0)
         {
             m_player->getComponent<CTransform>().scale.x = -1.0f;
         }
+        
     }
+
 }
 
 void Scene_Play::sLifeSpan()
@@ -198,36 +261,50 @@ void Scene_Play::sDoAction(const Action& action)
         else if (action.name() == "QUIT") { onEnd(); }
 
         // player actions
-        if (action.name() == "UP") { m_player->getComponent<CInput>().up = true; }
+        auto& comp = m_player->getComponent<CInput>();
+
+        if (action.name() == "UP") 
+        { 
+            comp.up = true;
+            m_player->addComponent<CState>().state = "Jump";
+        }
         if (action.name() == "LEFT") 
         {
             m_player->getComponent<CInput>().left = true;
-            m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
+                
+                //if (comp.right)
+                //{
+                //    m_player->getComponent<CInput>().right = false;
+                //}
+                
+            m_player->addComponent<CState>().state = "Run";
         }
         if (action.name() == "RIGHT") 
-        { 
+        {  
             m_player->getComponent<CInput>().right = true;
+
+                //if (comp.left)
+                //{
+                //    m_player->getComponent<CInput>().left = false;
+                //}
             m_player->addComponent<CState>().state = "Run";
             m_player->getComponent<CTransform>().scale.x = 1.0f;
         }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
     }
 
-    else if (action.type() == "END")
+    if (action.type() == "END")
     {
         if (action.name() == "UP") { m_player->getComponent<CInput>().up = false; }
         if (action.name() == "LEFT")
         {
             m_player->getComponent<CInput>().left = false;
-            m_player->addComponent<CState>().state = "Stand";
         }
         if (action.name() == "RIGHT")
         {
             m_player->getComponent<CInput>().right = false;
-            m_player->addComponent<CState>().state = "Stand";
         }
-        if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = false; }
-        
+        if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = false; } 
     }
 }
 
@@ -235,13 +312,19 @@ void Scene_Play::sAnimation()
 {
     // TODO: Complete the Animation class first
 
-    if (m_player->getComponent<CState>().state == "Run")
+    // Player animations
+    auto& const comp = m_player->getComponent<CState>();
+    auto& const currentAnim = m_player->getComponent<CAnimation>();
+
+    if (comp.state == "Run")
     {
-        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
+        if (currentAnim.animation.getName() != "MegamanRun")
+            m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
     }
     if (m_player->getComponent<CState>().state == "Stand")
     {
-        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
+        if (currentAnim.animation.getName() != "MegamanStand")
+            m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
     }
 
     if (m_player->getComponent<CState>().state == "air")

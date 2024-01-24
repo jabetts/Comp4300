@@ -100,5 +100,8 @@
     <Text Include="assets.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="level1.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

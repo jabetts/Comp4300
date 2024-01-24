@@ -177,6 +177,7 @@
   <ItemGroup>
     <Text Include="assets.txt" />
     <Text Include="config.txt" />
+    <Text Include="level1.txt" />
     <Text Include="readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

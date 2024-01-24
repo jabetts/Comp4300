@@ -84,7 +84,7 @@ struct CGravity : public Component
 
 struct CState : public Component
 {
-	std::string state = "jumping";
+	std::string state = "none";
 	CState() {}
 	CState(const std::string& s) : state(s) {}
 };
