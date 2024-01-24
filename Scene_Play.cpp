@@ -178,12 +178,22 @@ void Scene_Play::sMovement()
     // NOTE: Setting an entity's scale.x to -1/1 will make it face left right
 
     //Vec2 playerVelocity(0, m_player->getComponent<CTransform>().velocity.y);
-    Vec2 playerVelocity(m_player->getComponent<CTransform>().velocity.x, 0);
+    //Vec2 playerVelocity(m_player->getComponent<CTransform>().velocity.x, 0);
+
+    auto playerVelocity(m_player->getComponent<CTransform>().velocity);
 
     // player CInput
     auto& pInput = m_player->getComponent<CInput>();
-    if (pInput.up) { playerVelocity.y = -m_playerConfig.SPEED; }
-    if (pInput.left) { playerVelocity.x = -m_playerConfig.SPEED; }
+
+    if (pInput.up) 
+    { 
+        playerVelocity.y = m_playerConfig.JUMP; 
+    }
+
+    if (pInput.left) 
+    { 
+        playerVelocity.x = -m_playerConfig.SPEED; 
+    }
     else if (pInput.left == false)
     {
         playerVelocity.x = 0;
@@ -208,22 +218,22 @@ void Scene_Play::sMovement()
         {
             // TODO: uncomment gravity when collisions work
             //e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
-            e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
             // if the player is moving faster than max speed in any direction,
-            // set that direction to the players max speed.
-            if (e->getComponent<CTransform>().velocity.y > m_playerConfig.MAXSPEED)
-            {
-                e->getComponent<CTransform>().velocity.y = m_playerConfig.MAXSPEED;
-            }
+            // set that direction to the players max speed
         }
-        
+
+        //e->getComponent<CTransform>().velocity += e->getComponent<CTransform>().velocity;
+        e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
+
         if (e->getComponent<CTransform>().velocity.x < 0)
         {
             m_player->getComponent<CTransform>().scale.x = -1.0f;
         }
-        
+        if (e->getComponent<CTransform>().velocity.x > 0)
+        {
+            m_player->getComponent<CTransform>().scale.x = 1.0f;
+        }
     }
-
 }
 
 void Scene_Play::sLifeSpan()
@@ -270,25 +280,13 @@ void Scene_Play::sDoAction(const Action& action)
         }
         if (action.name() == "LEFT") 
         {
-            m_player->getComponent<CInput>().left = true;
-                
-                //if (comp.right)
-                //{
-                //    m_player->getComponent<CInput>().right = false;
-                //}
-                
+            m_player->getComponent<CInput>().left = true;  
             m_player->addComponent<CState>().state = "Run";
         }
         if (action.name() == "RIGHT") 
         {  
             m_player->getComponent<CInput>().right = true;
-
-                //if (comp.left)
-                //{
-                //    m_player->getComponent<CInput>().left = false;
-                //}
             m_player->addComponent<CState>().state = "Run";
-            m_player->getComponent<CTransform>().scale.x = 1.0f;
         }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
     }

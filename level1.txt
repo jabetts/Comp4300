@@ -19,4 +19,4 @@ Tile Ground 17 0
 Tile Ground 18 0
 Tile Ground 19 0
 Tile Ground 20 0
-Player 2 6 48 48 5 -20 20 0.75 Buster
+Player 2 6 48 48 5 -10 5 0.75 Buster
