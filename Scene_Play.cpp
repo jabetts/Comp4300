@@ -66,7 +66,7 @@ void Scene_Play::loadLevel(const std::string& filename)
             std::string text;
             int X, Y;
             f >> text >> X >> Y;
-            auto t = m_entityManager.addEntity("tile");
+            auto t = m_entityManager.addEntity("Tile");
             t->addComponent<CAnimation>(m_game->assets().getAnimation(text), true);
             t->addComponent<CBoundingBox>(m_game->assets().getAnimation("Ground").getSize());
             t->addComponent<CTransform>(gridToMidPixel(X, Y, t));
@@ -88,7 +88,7 @@ void Scene_Play::loadLevel(const std::string& filename)
     //
     // 55:44 in lecture
     //
-    auto e = m_entityManager.addEntity("tile");
+    //auto e = m_entityManager.addEntity("tile");
     // IMPORTANT: always add the CAnimation componenet first so that gridToMidPixel can compute correctly
     //brick->addComponent<CAnimation>(m_game->assets().getAnimation("Ground"), true);
     //brick->addComponent<CTransform>(Vec2(96, 480));
@@ -100,12 +100,6 @@ void Scene_Play::loadLevel(const std::string& filename)
     //{
     //    std::cout << "This could be a good way of identifing of a tile is a brick!\n";
     //}
-
-    auto block = m_entityManager.addEntity("tile");
-    block->addComponent<CAnimation>(m_game->assets().getAnimation("KnightRun"), true);
-    block->addComponent<CTransform>(Vec2(224, 480));
-    // add a bounding box, this will now show up if we press the 'C' key
-    block->addComponent<CBoundingBox>(m_game->assets().getAnimation("KnightRun").getSize());
 
     // NOTE: THIS IS INCREDIBLY IMPORTANT PLEASE READ THIS EXAMPLE
     //       Components are now returned as references rather than pointers
@@ -148,7 +142,7 @@ void Scene_Play::spawnPlayer()
     m_player = m_entityManager.addEntity("Player");
     m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
     m_player->addComponent<CTransform>(gridToMidPixel(1,1, m_player));
-    m_player->addComponent<CBoundingBox>(m_game->assets().getAnimation("MegamanStand").getSize());
+    m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW, m_playerConfig.CH));
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
     m_player->addComponent<CInput>();
 }
@@ -258,6 +252,35 @@ void Scene_Play::sCollision()
     //       used by the Animation system
     // TODO: Check to see if the player has fallen down a hole (y > height())
     // TODO: Don't let the player walk off the left side of the map
+
+    for (auto& e : m_entityManager.getEntities("Tile"))
+    {
+        // TODO: Get and use the x and y size and half sizes so non square bounding
+        //       boxes compute correctly
+        int ey = e->getComponent<CTransform>().pos.y - e->getComponent<CBoundingBox>().halfSize.y;
+        int ex = e->getComponent<CTransform>().pos.x - e->getComponent<CBoundingBox>().halfSize.x;
+        int py = m_player->getComponent<CTransform>().pos.y - m_player->getComponent<CBoundingBox>().halfSize.y;
+        int px = m_player->getComponent<CTransform>().pos.x - m_player->getComponent<CBoundingBox>().halfSize.x;
+        int es = e->getComponent<CBoundingBox>().size.y;
+        int ps = m_player->getComponent<CBoundingBox>().size.y;
+        int eh = e->getComponent<CBoundingBox>().halfSize.y;
+        int ph = m_player->getComponent<CBoundingBox>().halfSize.y;
+
+        // Horizontal overlap
+        // Need the top y of both and height of both
+        // y1 < y2 + h2
+        // y2 < y1 + h1
+        // x1 < x2 + w2
+        // x2 < x1 + w1
+        if ((ey < py + ps && py < ey + es) && (ex < px + ps && px < ex + ps))
+        {
+            int dx = std::abs(px - ex);
+            int dy = std::abs(py - ey);
+            int xOverlap = (eh + ph) - dx;
+            int yOverlap = (eh + ph) - dy;    
+            std::cout << "collision: xOverlap: " << xOverlap << "yOverlap: " << yOverlap << "\n------\n";
+        }
+     }
 }
 
 void Scene_Play::sDoAction(const Action& action)
