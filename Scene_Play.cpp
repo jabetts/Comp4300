@@ -299,8 +299,8 @@ void Scene_Play::sCollision()
                 // collision came from the right.
                 if (pOverlap.y > 0 && pPos.x > ePos.x)
                 {
-                    std::cout << "(pOverlap.y > 0 && pPos.x > ePos.x)\n";
-                    //m_player->getComponent<CTransform>().pos.x += overlap.x + 1;
+                    //std::cout << "(pOverlap.y > 0 && pPos.x > ePos.x)\n";
+                    m_player->getComponent<CTransform>().pos.x += overlap.x + 1;
                     //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
                 }
             }
@@ -476,7 +476,12 @@ void Scene_Play::sRender()
 
             for (float y = 0; y < height(); y += m_gridSize.y)
             {
-                drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
+                if (m_debug)
+                {
+                    drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
+                    drawLine(sf::Vector2f(x, y), sf::Vector2f(x + m_gridSize.x, y + m_gridSize.y));
+                    drawLine(sf::Vector2f(x + m_gridSize.x, y), sf::Vector2f(x, y + m_gridSize.y));
+                }
                 std::string xCell = std::to_string((int)x / (int)m_gridSize.x);
                 std::string yCell = std::to_string((int)y / (int)m_gridSize.y);
                 m_gridText.setString("(" + xCell + "," + yCell + ")");
