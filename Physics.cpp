@@ -27,7 +27,17 @@ Vec2 Physics::GetPreviousOverlap(std::shared_ptr<Entity> a, std::shared_ptr<Enti
 	//       previous overlap uses the entity's previous position
 	//       same as above only using prev position
 
-	return Vec2(0, 0);
+	auto posa = a->getComponent<CTransform>().pos;
+	auto posb = b->getComponent<CTransform>().prevPos;
+	auto boxa = a->getComponent<CBoundingBox>();
+	auto boxb = b->getComponent<CBoundingBox>();
+
+	Vec2 delta(std::abs(posa.x - posb.x), std::abs(posa.y - posb.y));
+	float ox = (boxa.halfSize.x + boxb.halfSize.x) - delta.x;
+	float oy = (boxa.halfSize.y + boxb.halfSize.y) - delta.y;
+
+	return Vec2(ox, oy);
+	
 }
 
 bool Physics::isCollision(const std::shared_ptr<Entity> a,const std::shared_ptr<Entity> b) const

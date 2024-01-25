@@ -5,6 +5,7 @@ Texture Basalt assets/Tiles/basalt.png
 Texture MegamanStand assets/MegamanStand.png
 Texture MegamanRun assets/MegamanRun.png
 Texture Ground assets/Ground.png
+Texture Brick assets/Brick.png
 Font Hack assets/hack.ttf
 Font Mario assets/mario.ttf
 Animation MegamanStand MegamanStand 3 60
@@ -14,3 +15,4 @@ Animation KnightIdle KnightIdle 4 60
 Animation OrcIdle OrcIdle 4 60
 Animation Basalt Basalt 1 0
 Animation Ground Ground 1 0
+Animation Brick Brick 1 0

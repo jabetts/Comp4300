@@ -180,18 +180,21 @@ void Scene_Play::sMovement()
     // player CInput
     auto& pInput = m_player->getComponent<CInput>();
 
-    if (pInput.up) 
-    { 
-        playerVelocity.y = -m_playerConfig.SPEED; 
+
+    m_player->getComponent<CTransform>().prevPos = m_player->getComponent<CTransform>().pos;
+
+    if (pInput.up)
+    {
+        playerVelocity.y = -m_playerConfig.SPEED;
     }
     if (pInput.up == false)
     {
         playerVelocity.y = 0;
     }
 
-    if (pInput.left) 
-    { 
-        playerVelocity.x = -m_playerConfig.SPEED; 
+    if (pInput.left)
+    {
+        playerVelocity.x = -m_playerConfig.SPEED;
     }
     else if (pInput.left == false)
     {
@@ -203,7 +206,7 @@ void Scene_Play::sMovement()
         playerVelocity.x = 0;
     }
     if (pInput.down) { playerVelocity.y = 3; }
- 
+
     m_player->getComponent<CTransform>().velocity = playerVelocity;
 
     if (playerVelocity.x == 0 and playerVelocity.y == 0)
@@ -263,25 +266,41 @@ void Scene_Play::sCollision()
     Physics p;
 
     for (auto& e : m_entityManager.getEntities("Tile"))
-    {
-        
+    {   
         if (p.isCollision(e, m_player))
         {
-            Vec2 overLap = p.GetOverlap(e, m_player);
+            Vec2 overlap = p.GetOverlap(e, m_player);
+            Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
+            float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
 
-            std::cout << "x: " << overLap.x << " y: " << overLap.y << std::endl;
+            std::cout << " overlap: " << overlap.x << " " << overlap.y << std::endl;
+            std::cout << "pOverlap: " << pOverlap.x << " " << pOverlap.y << std::endl;
+
+            // Crude resolution
+            Vec2 pPos = m_player->getComponent<CTransform>().pos;
+            Vec2 ePos = e->getComponent<CTransform>().pos;
+
+            // collision came from the left.
+            if (pOverlap.y > 0 && pPos.x < ePos.x)
+            {
+                m_player->getComponent<CTransform>().pos.x -= overlap.x;
+            }
+            // collision came from the right.
+            if (pOverlap.y > 0 && pPos.x > ePos.x)
+            {
+                m_player->getComponent<CTransform>().pos.x += overlap.x;
+            }
+            // collision came from the top
+            if (pOverlap.x > 0 && pPos.y < ePos.y)
+            {
+                m_player->getComponent<CTransform>().pos.y -= overlap.y;
+            }
+            // collision came from the bottom
+            if (pOverlap.x > 0 && pPos.y > ePos.y)
+            {
+                m_player->getComponent<CTransform>().pos.y += overlap.y;
+            }
         }
-        
-        /*
-        if ((ey < py + ps && py < ey + es) && (ex < px + ps && px < ex + ps))
-        {
-            int dx = std::abs(px - ex);
-            int dy = std::abs(py - ey);
-            int xOverlap = (eh + ph) - dx;
-            int yOverlap = (eh + ph) - dy;    
-            std::cout << "collision: xOverlap: " << xOverlap << "yOverlap: " << yOverlap << "\n------\n";
-        }
-        */
      }
 }
 
