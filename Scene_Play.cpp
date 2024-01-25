@@ -21,18 +21,21 @@ void Scene_Play::init(const std::string& levelPath)
     registerAction(sf::Keyboard::T,      "TOGGLE_TEXTURE");     // Toggle drawing (T)extures
     registerAction(sf::Keyboard::C,      "TOGGLE_COLLISION");   // Toggle drawing (C)ollision Boxes
     registerAction(sf::Keyboard::G,      "TOGGLE_GRID");        // Toggle drawing (G)rid
+    registerAction(sf::Keyboard::P,      "COLLISIONS");         // Toggle collisions (P)
+    registerAction(sf::Keyboard::O,      "DEBUG");              // Toggle debug text (O)
 
     registerAction(sf::Keyboard::W,      "UP");
     registerAction(sf::Keyboard::A,      "LEFT");
     registerAction(sf::Keyboard::D,      "RIGHT");
     registerAction(sf::Keyboard::S,      "DOWN");
     registerAction(sf::Keyboard::Space,  "SHOOT");
-    registerAction(sf::Keyboard::M,      "ANIM"); // animation debug
+    
 
     // TODO: Register all other gameplay Actions
 
     m_gridText.setCharacterSize(12);
     m_gridText.setFont(m_game->assets().getFont("Hack"));
+    m_debugText.setFont(m_game->assets().getFont("Hack"));
 
     loadLevel(levelPath);
 }
@@ -107,8 +110,8 @@ void Scene_Play::loadLevel(const std::string& filename)
 Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity)
 { 
     auto size = entity->getComponent<CAnimation>().animation.getSprite().getOrigin();
-    int pixelX = (gridX * (float)m_gridSize.x) + size.x;
-    int pixelY = height() - (gridY * m_gridSize.y) - size.y; // However we need to flip this as tile positions for y are reversed.
+    float pixelX = (gridX * (float)m_gridSize.x) + size.x;
+    float pixelY = height() - (gridY * m_gridSize.y) - size.y; // However we need to flip this as tile positions for y are reversed.
 
 
     return Vec2(pixelX, pixelY);
@@ -124,7 +127,7 @@ void Scene_Play::spawnPlayer()
     //int originOffset = origin.y - m_playerConfig.CH;
     //m_player->addComponent<CAnimation>().animation.getSprite().setOrigin(origin.x, origin.y + originOffset);
     m_player->addComponent<CTransform>(gridToMidPixel(1,1, m_player));
-    m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW, m_playerConfig.CH));
+    m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW - 5, m_playerConfig.CH));
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
     m_player->addComponent<CInput>();
 }
@@ -230,12 +233,11 @@ void Scene_Play::sCollision()
     //           and gravity will have a positive y-component
     //           Also, something BELOW something else will have a y value GREATER than it
 
-    // TODO: Implement Physics::GetOverlap() function, use it in this function
 
     // TODO: Implement bullet / tile collisions
     //       Destroy the tile if it has a brick animation
     // TODO: Implement the player / tile collision and resolutions
-    //       Update the CState compinenet of the player to store whether
+    //       Update the CState componenet of the player to store whether
     //       it is currently on the ground or in the air. This will be
     //       used by the Animation system
     // TODO: Check to see if the player has fallen down a hole (y > height())
@@ -247,7 +249,14 @@ void Scene_Play::sCollision()
 
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
-        
+        float bbox = m_player->getComponent<CTransform>().pos.x - m_player->getComponent<CBoundingBox>().halfSize.x;
+        m_debugString = "Bounding box start: " + std::to_string((int)bbox);
+        bbox = m_player->getComponent<CTransform>().pos.x + m_player->getComponent<CBoundingBox>().halfSize.x;
+        m_debugString += " Bounding box end: " + std::to_string((int)bbox);
+        m_debugText.setString(m_debugString);
+        m_debugText.setPosition(20, 5);
+        m_debugText.setCharacterSize(15);
+
         if (p.isCollision(e, m_player))
         {
             std::cout << "Collision\n";
@@ -256,40 +265,46 @@ void Scene_Play::sCollision()
             Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
             float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
 
-            std::cout << " overlap: " << overlap.x << " " << overlap.y << std::endl;
-            std::cout << "pOverlap: " << pOverlap.x << " " << pOverlap.y << std::endl;
-
+            m_debugString += "\nOverlap x: " + std::to_string((int)overlap.x) + " overlap y: " + std::to_string((int)overlap.y);
+            m_debugText.setString(m_debugString);
+  
             // Crude resolution
             Vec2 pPos = m_player->getComponent<CTransform>().pos;
             Vec2 ePos = e->getComponent<CTransform>().pos;
+            Vec2 pbox = m_player->getComponent<CBoundingBox>().size;
 
-            
-            // collision came from the left.
-            if (pOverlap.y > 0 && pPos.x < ePos.x)
+            if (m_collisions)
             {
-                m_player->getComponent<CTransform>().pos.x -= overlap.x;
+                // collision came from the top
+                if (pOverlap.x > 0 && pPos.y < ePos.y)
+                {
+                    m_player->getComponent<CTransform>().pos.y -= overlap.y + 1;
+                    //std::cout << " (pOverlap.x > 0 && pPos.y < ePos.y)\n";
+                    //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
+                }
+                // collision came from the bottom
+                if (pOverlap.x > 0 && pPos.y > ePos.y)
+                {
+                    m_player->getComponent<CTransform>().pos.y += overlap.y + 1;
+                    //std::cout << "collision from bottom of tile\n";
+                    //std::cout << "bbox x: " << pPos.y - pbox.y << " to x: " << pPos.x + pbox.x << std::endl;
+                }
+                // collision came from the left.
+                if (pOverlap.y > 0 && pPos.x < ePos.x)
+                {
+                    m_player->getComponent<CTransform>().pos.x -= overlap.x + 1;
+                    //std::cout << "(pOverlap.y > 0 && pPos.x < ePos.x)\n";
+                    //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
+                }
+                // collision came from the right.
+                if (pOverlap.y > 0 && pPos.x > ePos.x)
+                {
+                    std::cout << "(pOverlap.y > 0 && pPos.x > ePos.x)\n";
+                    //m_player->getComponent<CTransform>().pos.x += overlap.x + 1;
+                    //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
+                }
             }
-            // collision came from the right.
-            if (pOverlap.y > 0 && pPos.x > ePos.x)
-            {
-                m_player->getComponent<CTransform>().pos.x += overlap.x;
-            }
-            // collision came from the top
-            if (pOverlap.x > 0 && pPos.y < ePos.y)
-            {
-                m_player->getComponent<CTransform>().pos.y -= overlap.y;
-            }
-            // collision came from the bottom
-            if (pOverlap.x > 0 && pPos.y > ePos.y)
-            {
-                // destroy brick tiles.
-
-                m_player->getComponent<CTransform>().pos.y += overlap.y;
-                m_player->getComponent<CTransform>().pos.x += overlap.y;
-            }
-            
         }
-        
      }
 }
 
@@ -302,6 +317,8 @@ void Scene_Play::sDoAction(const Action& action)
         else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; std::cout << "Grid " << (m_drawGrid ? "On\n" : "Off\n"); }
         else if (action.name() == "PAUSE") { setPaused(!m_paused); }
         else if (action.name() == "QUIT") { onEnd(); }
+        else if (action.name() == "COLLISIONS") { m_collisions = !m_collisions; }
+        else if (action.name() == "DEBUG") { m_debugFlag = !m_debugFlag; }
 
         // player actions
         auto& comp = m_player->getComponent<CInput>();
@@ -402,6 +419,9 @@ void Scene_Play::sRender()
     view.setCenter(windowCenterX, m_game->window().getSize().y - view.getCenter().y);
     m_game->window().setView(view);
 
+    
+
+
     // draw all Entity textures / animations
     if (m_drawTextures)
     {
@@ -465,6 +485,19 @@ void Scene_Play::sRender()
             }
         }
     }
+
+    // DEBUG player pos
+    if (m_debugFlag)
+    {
+        sf::CircleShape shape(3.0f, 6);
+        shape.setPosition(sf::Vector2f(pPos.x, pPos.y));
+        shape.setFillColor(sf::Color::Magenta);
+        shape.setOrigin(1.5f, 1.5f);
+        m_game->window().draw(shape);
+        m_game->window().draw(shape);
+        m_game->window().draw(m_debugText);
+    }
+    
     m_game->window().display();
     m_currentFrame++;
 }

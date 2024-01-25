@@ -6,13 +6,12 @@
 Vec2 Physics::GetOverlap(const std::shared_ptr<Entity> a, const std::shared_ptr<Entity> b)
 {
 	// TODO: return the overlap rectangle size of the bounding boxes of entity a and b
-	// if both entity's have transforms and bounding boxes, then computre the overlap
+	// if both entity's have transforms and bounding boxes, then compute the overlap
 
 	auto& posa = a->getComponent<CTransform>().pos;
 	auto& posb = b->getComponent<CTransform>().pos;
 	auto& boxa = a->getComponent<CBoundingBox>();
 	auto& boxb = b->getComponent<CBoundingBox>();
-
 
 	Vec2 delta(std::abs(posa.x - posb.x),std::abs(posa.y - posb.y));
 	float ox = (boxa.halfSize.x + boxb.halfSize.x) - delta.x;
@@ -42,16 +41,15 @@ Vec2 Physics::GetPreviousOverlap(std::shared_ptr<Entity> a, std::shared_ptr<Enti
 
 bool Physics::isCollision(const std::shared_ptr<Entity> a,const std::shared_ptr<Entity> b) const
 {
-	int x1 = a->getComponent<CTransform>().pos.x;
-	int x2 = b->getComponent<CTransform>().pos.x;
-	int y1 = a->getComponent<CTransform>().pos.y;
-	int y2 = b->getComponent<CTransform>().pos.y;
-	int w1 = a->getComponent<CBoundingBox>().size.x;
-	int w2 = b->getComponent<CBoundingBox>().size.x;
-	int h1 = a->getComponent<CBoundingBox>().size.y;
-	int h2 = b->getComponent<CBoundingBox>().size.y;
 
-	// Vertical overlaps if x1 < x2 + w2 && x2 < x1 + w1
-	// Horizontal overlap if y1 < y2 + h2 && y2 < y1 + h1;
-	return ((x1 < x2 + w2 && x2 < x1 + w1) && (y1 < y2 + h2 && y2 < y1 + h1));
+	Vec2 p1 = a->getComponent<CTransform>().pos - a->getComponent<CBoundingBox>().halfSize;
+	Vec2 p2 = b->getComponent<CTransform>().pos - b->getComponent<CBoundingBox>().halfSize;
+	
+	Vec2& s1 = a->getComponent<CBoundingBox>().size;
+	Vec2& s2 = b->getComponent<CBoundingBox>().size;
+
+	// TODO: May be able to speed this up by checking each axis separatley and returning false if either
+	// fail 
+	return(p1.x < p2.x + s2.x && p2.x < p1.x + s1.x &&
+		p1.y < p2.y + s2.y && p2.y < p1.y + s1.y);
 }

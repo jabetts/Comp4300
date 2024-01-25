@@ -23,8 +23,12 @@ protected:
 	bool						m_drawTextures = true;
 	bool						m_drawCollision = false;
 	bool						m_drawGrid = false;
+	bool						m_collisions = true;
+	bool						m_debugFlag = false;
 	Vec2						m_gridSize = {64, 64};
 	sf::Text					m_gridText;
+	sf::Text                    m_debugText;
+	std::string                 m_debugString;
 
 	void init(const std::string& levelPath);
 	void loadLevel(const std::string& filename);
