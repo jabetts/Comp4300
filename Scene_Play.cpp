@@ -119,13 +119,8 @@ Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity
 
 void Scene_Play::spawnPlayer()
 {
-    // here is a sample player entity which you can use to constrcut other entities
     m_player = m_entityManager.addEntity("Player");
     m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
-    // Where the bounding box is smaller, we still want it to be at the bottom of the sprite.
-    //sf::Vector2f origin = m_player->getComponent<CAnimation>().animation.getSprite().getOrigin();
-    //int originOffset = origin.y - m_playerConfig.CH;
-    //m_player->addComponent<CAnimation>().animation.getSprite().setOrigin(origin.x, origin.y + originOffset);
     m_player->addComponent<CTransform>(gridToMidPixel(1,1, m_player));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW - 5, m_playerConfig.CH));
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
@@ -168,7 +163,7 @@ void Scene_Play::sMovement()
 
     if (pInput.up)
     {
-        playerVelocity.y = -m_playerConfig.SPEED;
+        playerVelocity.y = m_playerConfig.JUMP;
     }
     if (pInput.up == false)
     {
@@ -202,7 +197,7 @@ void Scene_Play::sMovement()
         if (e->hasComponent<CGravity>())
         {
             // TODO: uncomment gravity when collisions work
-            //e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
+            e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
             // if the player is moving faster than max speed in any direction,
             // set that direction to the players max speed
         }
@@ -476,12 +471,13 @@ void Scene_Play::sRender()
 
             for (float y = 0; y < height(); y += m_gridSize.y)
             {
-                if (m_debug)
+                if (m_debugFlag)
                 {
-                    drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
+                    
                     drawLine(sf::Vector2f(x, y), sf::Vector2f(x + m_gridSize.x, y + m_gridSize.y));
                     drawLine(sf::Vector2f(x + m_gridSize.x, y), sf::Vector2f(x, y + m_gridSize.y));
                 }
+                drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
                 std::string xCell = std::to_string((int)x / (int)m_gridSize.x);
                 std::string yCell = std::to_string((int)y / (int)m_gridSize.y);
                 m_gridText.setString("(" + xCell + "," + yCell + ")");
