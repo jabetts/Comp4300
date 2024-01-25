@@ -85,23 +85,6 @@ void Scene_Play::loadLevel(const std::string& filename)
     }
     spawnPlayer();
 
-    // some sample entities
-    //
-    // 55:44 in lecture
-    //
-    //auto e = m_entityManager.addEntity("tile");
-    // IMPORTANT: always add the CAnimation componenet first so that gridToMidPixel can compute correctly
-    //brick->addComponent<CAnimation>(m_game->assets().getAnimation("Ground"), true);
-    //brick->addComponent<CTransform>(Vec2(96, 480));
-    //brick->addComponent<CBoundingBox>(m_game->assets().getAnimation("Ground").getSize());
-    // NOTE: your final code should position the entitiy with the grid x,y position read from the file:
-    //brick->addComponent<CTransform>(gridToMidPixel(gridX, gridY, brick);
-
-    //if (brick->getComponent<CAnimation>().animation.getName() == "Ground")
-    //{
-    //    std::cout << "This could be a good way of identifing of a tile is a brick!\n";
-    //}
-
     // NOTE: THIS IS INCREDIBLY IMPORTANT PLEASE READ THIS EXAMPLE
     //       Components are now returned as references rather than pointers
     //       If you do not specify a reference variable type, it will COPY the component
@@ -122,13 +105,7 @@ void Scene_Play::loadLevel(const std::string& filename)
 }
 
 Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity)
-{
-    // TODO: This function takes in a grid (x,y) position and an Entity
-    //       return a Vec2 indicating where the CENTER position of the Entity should be
-    //       You must use the Entity's Animation size to position it correctly
-    //       The size of the grid width and height is stored in m_gridSize.x and m_gridSize.y
-    //       The bottom-left corner of the Animation should align with the bottom left of the grid cell
-    
+{ 
     auto size = entity->getComponent<CAnimation>().animation.getSprite().getOrigin();
     int pixelX = (gridX * (float)m_gridSize.x) + size.x;
     int pixelY = height() - (gridY * m_gridSize.y) - size.y; // However we need to flip this as tile positions for y are reversed.
@@ -142,6 +119,10 @@ void Scene_Play::spawnPlayer()
     // here is a sample player entity which you can use to constrcut other entities
     m_player = m_entityManager.addEntity("Player");
     m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
+    // Where the bounding box is smaller, we still want it to be at the bottom of the sprite.
+    //sf::Vector2f origin = m_player->getComponent<CAnimation>().animation.getSprite().getOrigin();
+    //int originOffset = origin.y - m_playerConfig.CH;
+    //m_player->addComponent<CAnimation>().animation.getSprite().setOrigin(origin.x, origin.y + originOffset);
     m_player->addComponent<CTransform>(gridToMidPixel(1,1, m_player));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW, m_playerConfig.CH));
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
@@ -179,7 +160,6 @@ void Scene_Play::sMovement()
 
     // player CInput
     auto& pInput = m_player->getComponent<CInput>();
-
 
     m_player->getComponent<CTransform>().prevPos = m_player->getComponent<CTransform>().pos;
 
@@ -267,8 +247,11 @@ void Scene_Play::sCollision()
 
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
+        
         if (p.isCollision(e, m_player))
         {
+            std::cout << "Collision\n";
+
             Vec2 overlap = p.GetOverlap(e, m_player);
             Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
             float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
@@ -280,6 +263,7 @@ void Scene_Play::sCollision()
             Vec2 pPos = m_player->getComponent<CTransform>().pos;
             Vec2 ePos = e->getComponent<CTransform>().pos;
 
+            
             // collision came from the left.
             if (pOverlap.y > 0 && pPos.x < ePos.x)
             {
@@ -298,9 +282,14 @@ void Scene_Play::sCollision()
             // collision came from the bottom
             if (pOverlap.x > 0 && pPos.y > ePos.y)
             {
+                // destroy brick tiles.
+
                 m_player->getComponent<CTransform>().pos.y += overlap.y;
+                m_player->getComponent<CTransform>().pos.x += overlap.y;
             }
+            
         }
+        
      }
 }
 
