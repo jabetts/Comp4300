@@ -103,5 +103,35 @@
     <Text Include="level1.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="assets\Terms.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\Ground.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\megaman.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\MegamanRun.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\MegamanStand.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\mtileset.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="assets\Hack.ttf">
+      <Filter>Resource Files</Filter>
+    </Font>
+    <Font Include="assets\mario.ttf">
+      <Filter>Resource Files</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\mario-tiles.webp" />
+    <None Include="assets\MegamanRun.png.pyxel" />
   </ItemGroup>
 </Project>

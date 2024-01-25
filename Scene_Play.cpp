@@ -6,6 +6,7 @@
 #include "Action.h"
 
 #include <iostream>
+#include<memory>
 
 Scene_Play::Scene_Play(GameEngine* gameEngine, const std::string& levelPath)
     : Scene(gameEngine), m_levelPath(levelPath)
@@ -181,7 +182,11 @@ void Scene_Play::sMovement()
 
     if (pInput.up) 
     { 
-        playerVelocity.y = m_playerConfig.JUMP; 
+        playerVelocity.y = -m_playerConfig.SPEED; 
+    }
+    if (pInput.up == false)
+    {
+        playerVelocity.y = 0;
     }
 
     if (pInput.left) 
@@ -253,25 +258,21 @@ void Scene_Play::sCollision()
     // TODO: Check to see if the player has fallen down a hole (y > height())
     // TODO: Don't let the player walk off the left side of the map
 
+    // TODO: Dont like having to create an object just to do physics, so change the physics
+    //       object to just the functions available through the .h
+    Physics p;
+
     for (auto& e : m_entityManager.getEntities("Tile"))
     {
-        // TODO: Get and use the x and y size and half sizes so non square bounding
-        //       boxes compute correctly
-        int ey = e->getComponent<CTransform>().pos.y - e->getComponent<CBoundingBox>().halfSize.y;
-        int ex = e->getComponent<CTransform>().pos.x - e->getComponent<CBoundingBox>().halfSize.x;
-        int py = m_player->getComponent<CTransform>().pos.y - m_player->getComponent<CBoundingBox>().halfSize.y;
-        int px = m_player->getComponent<CTransform>().pos.x - m_player->getComponent<CBoundingBox>().halfSize.x;
-        int es = e->getComponent<CBoundingBox>().size.y;
-        int ps = m_player->getComponent<CBoundingBox>().size.y;
-        int eh = e->getComponent<CBoundingBox>().halfSize.y;
-        int ph = m_player->getComponent<CBoundingBox>().halfSize.y;
+        
+        if (p.isCollision(e, m_player))
+        {
+            Vec2 overLap = p.GetOverlap(e, m_player);
 
-        // Horizontal overlap
-        // Need the top y of both and height of both
-        // y1 < y2 + h2
-        // y2 < y1 + h1
-        // x1 < x2 + w2
-        // x2 < x1 + w1
+            std::cout << "x: " << overLap.x << " y: " << overLap.y << std::endl;
+        }
+        
+        /*
         if ((ey < py + ps && py < ey + es) && (ex < px + ps && px < ex + ps))
         {
             int dx = std::abs(px - ex);
@@ -280,6 +281,7 @@ void Scene_Play::sCollision()
             int yOverlap = (eh + ph) - dy;    
             std::cout << "collision: xOverlap: " << xOverlap << "yOverlap: " << yOverlap << "\n------\n";
         }
+        */
      }
 }
 
@@ -368,7 +370,12 @@ void Scene_Play::sAnimation()
 
 void Scene_Play::onEnd()
 {
-    // TODO: When the scene ends, change back to the MENU scene
+    // reset the view
+    float windowCenterX = m_game->window().getSize().x / 2.0f;
+    sf::View view = m_game->window().getView();
+    view.setCenter(m_game->window().getSize().x / 2.0f , m_game->window().getSize().y / 2.0f);
+    m_game->window().setView(view);
+
     m_game->changeScene("menu", std::make_shared<Scene_Menu>(m_game), false);
 }
 

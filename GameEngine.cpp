@@ -41,13 +41,13 @@ void GameEngine::userInput()
 				}
 
 			}
-			if (event.key.code == sf::Keyboard::Tab)
-			{
-				if (m_currentScene != "menu")
-				{
-					changeScene("menu", std::make_shared<Scene_Menu>(this), true);
-				}
-			}
+			//if (event.key.code == sf::Keyboard::Tab)
+			//{
+			//	if (m_currentScene != "menu")
+			//	{
+			//		changeScene("menu", std::make_shared<Scene_Menu>(this), true);
+			//	}
+			//}
 		}
 
 		if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)
