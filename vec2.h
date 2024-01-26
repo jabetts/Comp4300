@@ -18,7 +18,7 @@ struct Vec2
 	Vec2 operator * (const float val) const;
 
 	Vec2 operator += (const Vec2& rhs);
-	void operator -= (const Vec2& rhs);
+	Vec2 operator -= (const Vec2& rhs);
 	void operator *= (const float val);
 	void operator /= (const float val);
 

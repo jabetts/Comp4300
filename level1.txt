@@ -1,4 +1,4 @@
-Tile Brick 7 4
+
 Tile Ground 0 0
 Tile Ground 1 0
 Tile Ground 2 0
@@ -22,5 +22,11 @@ Tile Ground 19 0
 Tile Ground 20 0
 Tile Brick 7 4
 Tile Brick 9 4
-Tile Brick 10 1
-Player 2 6 30 63 5 -10 5 3.8 Buster
+Tile Brick 11 4
+Tile Block 17 1
+Tile Block 17 2
+Tile Block 17 3
+Tile Ground 23 0
+Tile Ground 24 0
+Tile Ground 25 0
+Player 2 6 30 63 5 -10 8 15 Buster

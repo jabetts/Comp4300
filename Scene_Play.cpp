@@ -121,7 +121,7 @@ void Scene_Play::spawnPlayer()
 {
     m_player = m_entityManager.addEntity("Player");
     m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
-    m_player->addComponent<CTransform>(gridToMidPixel(1,1, m_player));
+    m_player->addComponent<CTransform>(gridToMidPixel(m_playerConfig.X, m_playerConfig.Y, m_player));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW - 5, m_playerConfig.CH));
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
     m_player->addComponent<CInput>();
@@ -149,12 +149,9 @@ void Scene_Play::sMovement()
     // TODO: Implement player movement / jumping based on its CInput componenet
     // TODO: Implement gravity's effect on the player
     // TODO: Implement the maximum player speed in both the X and Y directions
-    // NOTE: Setting an entity's scale.x to -1/1 will make it face left right
 
-    //Vec2 playerVelocity(0, m_player->getComponent<CTransform>().velocity.y);
-    //Vec2 playerVelocity(m_player->getComponent<CTransform>().velocity.x, 0);
-
-    auto playerVelocity(m_player->getComponent<CTransform>().velocity);
+    float px =  m_player->getComponent<CTransform>().velocity.x;
+    float py = m_player->getComponent<CTransform>().velocity.y;
 
     // player CInput
     auto& pInput = m_player->getComponent<CInput>();
@@ -163,27 +160,57 @@ void Scene_Play::sMovement()
 
     if (pInput.up)
     {
-        playerVelocity.y = m_playerConfig.JUMP;
+        py += m_playerConfig.JUMP;
     }
     if (pInput.up == false)
     {
-        playerVelocity.y = 0;
-    }
 
+    }
     if (pInput.left)
     {
-        playerVelocity.x = -m_playerConfig.SPEED;
+        px -= m_playerConfig.SPEED;
     }
     else if (pInput.left == false)
     {
-        playerVelocity.x = 0;
+        // Decelerate
+        if (px < 0)
+        {
+            px += 0.5;
+        }
     }
-    if (pInput.right) { playerVelocity.x = m_playerConfig.SPEED; }
-    else if (!pInput.right == false)
+    if (pInput.right) 
+    { 
+        if (px < 0)
+            px += 0.5;
+        else
+            px += m_playerConfig.SPEED; 
+    }
+    else if (pInput.right == false)
     {
-        playerVelocity.x = 0;
+        // Decelerate
+        if (px > 0)
+        {
+            px -= 0.5;
+        }
     }
-    if (pInput.down) { playerVelocity.y = 3; }
+    //if (pInput.down) { playerVelocity.y = 3; }
+
+    if (std::abs(py) > m_playerConfig.MAXSPEED)
+    {
+        if (py < 0)
+            py = m_playerConfig.MAXSPEED;
+        else
+            py = -m_playerConfig.MAXSPEED;
+    }
+    if (std::abs(px) > m_playerConfig.MAXSPEED)
+    {
+        if (px < 0)
+            px = -m_playerConfig.MAXSPEED;
+        else
+            px = m_playerConfig.MAXSPEED;
+    }
+
+    Vec2 playerVelocity(px, py);
 
     m_player->getComponent<CTransform>().velocity = playerVelocity;
 
@@ -192,26 +219,30 @@ void Scene_Play::sMovement()
         m_player->addComponent<CState>().state = "Stand";
     }
 
+   
+
     for (auto e : m_entityManager.getEntities())
     {
+        // Do gravity first
         if (e->hasComponent<CGravity>())
         {
-            // TODO: uncomment gravity when collisions work
             e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
-            // if the player is moving faster than max speed in any direction,
-            // set that direction to the players max speed
+            if (e->getComponent<CTransform>().velocity.y > m_playerConfig.MAXSPEED)
+            {
+                e->getComponent<CTransform>().velocity.y = m_playerConfig.MAXSPEED;
+            }
         }
 
-        //e->getComponent<CTransform>().velocity += e->getComponent<CTransform>().velocity;
         e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
 
+        // Flip sprite based on movement direction
         if (e->getComponent<CTransform>().velocity.x < 0)
         {
-            m_player->getComponent<CTransform>().scale.x = -1.0f;
+            e->getComponent<CTransform>().scale.x = -1.0f;
         }
         if (e->getComponent<CTransform>().velocity.x > 0)
         {
-            m_player->getComponent<CTransform>().scale.x = 1.0f;
+            e->getComponent<CTransform>().scale.x = 1.0f;
         }
     }
 }
@@ -236,34 +267,37 @@ void Scene_Play::sCollision()
     //       it is currently on the ground or in the air. This will be
     //       used by the Animation system
     // TODO: Check to see if the player has fallen down a hole (y > height())
-    // TODO: Don't let the player walk off the left side of the map
 
     // TODO: Dont like having to create an object just to do physics, so change the physics
     //       object to just the functions available through the .h
     Physics p;
 
+    // First test the player is not off the left side of the map or fallen off
+    Vec2& pPos = m_player->getComponent<CTransform>().pos;
+    if (pPos.x <= 0)
+    {
+        pPos.x = 0.0;
+    }
+    if (pPos.y > height())
+    {
+        pPos = gridToMidPixel(m_playerConfig.X, m_playerConfig.Y, m_player);
+    }
+    // TODO: make this so the player can go up to negative halfSize of the bounding box
+    if (pPos.y <= 0)
+    {
+        pPos.y = 0;
+    }
+
+    // Check for tile collisions
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
-        float bbox = m_player->getComponent<CTransform>().pos.x - m_player->getComponent<CBoundingBox>().halfSize.x;
-        m_debugString = "Bounding box start: " + std::to_string((int)bbox);
-        bbox = m_player->getComponent<CTransform>().pos.x + m_player->getComponent<CBoundingBox>().halfSize.x;
-        m_debugString += " Bounding box end: " + std::to_string((int)bbox);
-        m_debugText.setString(m_debugString);
-        m_debugText.setPosition(20, 5);
-        m_debugText.setCharacterSize(15);
-
         if (p.isCollision(e, m_player))
         {
-            std::cout << "Collision\n";
-
             Vec2 overlap = p.GetOverlap(e, m_player);
             Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
             float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
 
-            m_debugString += "\nOverlap x: " + std::to_string((int)overlap.x) + " overlap y: " + std::to_string((int)overlap.y);
-            m_debugText.setString(m_debugString);
-  
-            // Crude resolution
+            // Crude collision resolution
             Vec2 pPos = m_player->getComponent<CTransform>().pos;
             Vec2 ePos = e->getComponent<CTransform>().pos;
             Vec2 pbox = m_player->getComponent<CBoundingBox>().size;
@@ -274,33 +308,25 @@ void Scene_Play::sCollision()
                 if (pOverlap.x > 0 && pPos.y < ePos.y)
                 {
                     m_player->getComponent<CTransform>().pos.y -= overlap.y + 1;
-                    //std::cout << " (pOverlap.x > 0 && pPos.y < ePos.y)\n";
-                    //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
                 }
                 // collision came from the bottom
                 if (pOverlap.x > 0 && pPos.y > ePos.y)
                 {
                     m_player->getComponent<CTransform>().pos.y += overlap.y + 1;
-                    //std::cout << "collision from bottom of tile\n";
-                    //std::cout << "bbox x: " << pPos.y - pbox.y << " to x: " << pPos.x + pbox.x << std::endl;
                 }
                 // collision came from the left.
                 if (pOverlap.y > 0 && pPos.x < ePos.x)
                 {
-                    m_player->getComponent<CTransform>().pos.x -= overlap.x + 1;
-                    //std::cout << "(pOverlap.y > 0 && pPos.x < ePos.x)\n";
-                    //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
+                    m_player->getComponent<CTransform>().pos.x -= overlap.x + 1;           
                 }
                 // collision came from the right.
                 if (pOverlap.y > 0 && pPos.x > ePos.x)
                 {
-                    //std::cout << "(pOverlap.y > 0 && pPos.x > ePos.x)\n";
                     m_player->getComponent<CTransform>().pos.x += overlap.x + 1;
-                    //std::cout << "bbox x: " << pPos.x - pbox.x << " to x: " << pPos.x + pbox.x << std::endl;
                 }
             }
         }
-     }
+    }
 }
 
 void Scene_Play::sDoAction(const Action& action)
@@ -338,7 +364,10 @@ void Scene_Play::sDoAction(const Action& action)
 
     if (action.type() == "END")
     {
-        if (action.name() == "UP") { m_player->getComponent<CInput>().up = false; }
+        if (action.name() == "UP") 
+        { 
+            m_player->getComponent<CInput>().up = false; 
+        }
         if (action.name() == "LEFT")
         {
             m_player->getComponent<CInput>().left = false;
@@ -473,7 +502,6 @@ void Scene_Play::sRender()
             {
                 if (m_debugFlag)
                 {
-                    
                     drawLine(sf::Vector2f(x, y), sf::Vector2f(x + m_gridSize.x, y + m_gridSize.y));
                     drawLine(sf::Vector2f(x + m_gridSize.x, y), sf::Vector2f(x, y + m_gridSize.y));
                 }
@@ -493,7 +521,7 @@ void Scene_Play::sRender()
         sf::CircleShape shape(3.0f, 6);
         shape.setPosition(sf::Vector2f(pPos.x, pPos.y));
         shape.setFillColor(sf::Color::Magenta);
-        shape.setOrigin(1.5f, 1.5f);
+        shape.setOrigin(shape.getRadius(), shape.getRadius());
         m_game->window().draw(shape);
         m_game->window().draw(shape);
         m_game->window().draw(m_debugText);
