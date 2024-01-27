@@ -25,4 +25,4 @@ Animation Brick Brick 1 0
 Animation Block Block 1 0
 Animation QuestionFull QuestionFull 3 30
 Animation QuestionEmpty QuestionEmpty 1 0
-Animation Coin Coin 2 15
+Animation Coin CoinSpin 2 15

@@ -32,6 +32,8 @@ void GameEngine::userInput()
 			if (event.key.code == sf::Keyboard::X)
 			{
 				
+				// TODO: Use this to create a DOOM style melt effect
+				//       when the game engine changes scenes
 				sf::Texture texture;
 				texture.create(m_window.getSize().x, m_window.getSize().y);
 				texture.update(m_window);
@@ -60,13 +62,6 @@ void GameEngine::userInput()
 
 			//detrmine  start or end action by whether it was press or release
 			const std::string actionType = (event.type == sf::Event::KeyPressed) ? "START" : "END";
-
-			// look up the action and send the action to the scene
-			// to spell out the below: first we can doAction on the current scene
-			// Do action wants an action, so we pass the object contructor and for the action name we select
-			// what is stored at the Key's index and the actionType of start of end
-			// the contructed action object then get passed to doAction which will have a switch or
-			// if statements based on the action.type and then action.name
 
 			currentScene()->doAction(Action(currentScene()->getActionMap().at(event.key.code), actionType));
 		}

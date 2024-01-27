@@ -120,7 +120,7 @@ Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity
 void Scene_Play::spawnPlayer()
 {
     m_player = m_entityManager.addEntity("Player");
-    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
+    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanJump"), true);
     m_player->addComponent<CTransform>(gridToMidPixel(m_playerConfig.X, m_playerConfig.Y, m_player));
     m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CW - 5, m_playerConfig.CH));
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
@@ -170,11 +170,13 @@ void Scene_Play::sMovement()
     if (pInput.up)
     {
         py += m_playerConfig.JUMP;
+        pInput.canJump = false;
+        pState.state = "Jump";
     }
-    if (pInput.up == false)
-    {
-
-    }
+    //if (pInput.up == false)
+    //{
+    //
+    //}
     if (pInput.left)
     {
         if (px > 0)
@@ -207,9 +209,9 @@ void Scene_Play::sMovement()
     // This will zero off those small drifts
     if (pInput.right == false && pInput.left == false)
     {
-        if ((px > -0.1 && px <= -0.5)  || (px > 0.1 && px <= 0.5))
+        if (((px > -0.1 && px <= -0.5)  || (px > 0.1 && px <= 0.5)) && pState.state != "Jump")
             px = 0;
-        m_player->addComponent<CState>().state = "Stand";
+        //m_player->addComponent<CState>().state = "Stand";
     }
 
     // Max jump speed is MAXSPEED * 1.5
@@ -315,6 +317,11 @@ void Scene_Play::sCollision()
             Vec2& pbox = m_player->getComponent<CBoundingBox>().size;
             Vec2& pVel = m_player->getComponent<CTransform>().velocity;
 
+            auto& pState = m_player->getComponent<CState>();
+
+            if (pState.state != "Ground")
+                pState.state = "Jump";
+
             if (m_collisions)
             {
                 // collision came from the top
@@ -323,7 +330,10 @@ void Scene_Play::sCollision()
                     pPos.y -= overlap.y + 1;
                     // change velocity to 0 if standing on a tile
                     pVel.y = 0;
-                    // Set a state
+                    // Set players state to can jump as they have landed
+                    m_player->getComponent<CInput>().canJump = true;
+                    
+                    pState.state = "Ground";
                 }
                 // collision came from the bottom
                 if (pOverlap.x > 0 && pPos.y > ePos.y)
@@ -366,27 +376,27 @@ void Scene_Play::sDoAction(const Action& action)
         else if (action.name() == "DEBUG") { m_debugFlag = !m_debugFlag; }
 
         // player actions
-        auto& comp = m_player->getComponent<CInput>();
+        auto& pInput = m_player->getComponent<CInput>();
         auto& pState = m_player->getComponent<CState>().state;
 
         if (action.name() == "UP") 
         { 
-            comp.up = true;
-            m_player->addComponent<CState>().state = "Jump";
+            if (pInput.canJump)
+            {
+                pInput.up = true;
+            }
         }
         if (action.name() == "LEFT") 
         {
-            m_player->getComponent<CInput>().left = true;  
-            //m_player->addComponent<CState>().state = "Run";
-            pState = "Run";
+            pInput.left = true;  
+
         }
         if (action.name() == "RIGHT") 
         {  
-            m_player->getComponent<CInput>().right = true;
-            //m_player->addComponent<CState>().state = "Run";
-            pState = "Run";
+            pInput.right = true;
         }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
+        
     }
 
     if (action.type() == "END")
@@ -414,16 +424,19 @@ void Scene_Play::sAnimation()
     // Player animations
     auto& const comp = m_player->getComponent<CState>();
     auto& const currentAnim = m_player->getComponent<CAnimation>();
+    auto& const pVel = m_player->getComponent<CTransform>().velocity;
 
-    if (comp.state == "Run")
+    if (comp.state == "Ground")
     {
-        if (currentAnim.animation.getName() != "MegamanRun")
-            m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
-    }
-    if (m_player->getComponent<CState>().state == "Stand")
-    {
-        if (currentAnim.animation.getName() != "MegamanStand")
+        if (pVel.x != 0)
+        {
+            if (currentAnim.animation.getName() != "MegamanRun")
+                m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);      
+        }
+        else
+        {
             m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
+        }
     }
 
     if (m_player->getComponent<CState>().state == "Jump")
@@ -457,9 +470,7 @@ void Scene_Play::onEnd()
 
 void Scene_Play::sRender()
 {
-    m_game->window().clear();
-    // 1:17:58 is lecture
-    // color the background darker so you know that the game is paused
+    // TODO: color the background darker so you know that the game is paused
     if (!m_paused) { m_game->window().clear(sf::Color(100, 100, 255)); }
     else { m_game->window().clear(sf::Color(75, 75, 75)); }
 
@@ -469,9 +480,6 @@ void Scene_Play::sRender()
     sf::View view = m_game->window().getView();
     view.setCenter(windowCenterX, m_game->window().getSize().y - view.getCenter().y);
     m_game->window().setView(view);
-
-    
-
 
     // draw all Entity textures / animations
     if (m_drawTextures)
@@ -541,6 +549,8 @@ void Scene_Play::sRender()
             }
         }
     }
+
+    std::cout << m_player->getComponent<CState>().state << "\n";
 
     // DEBUG player pos
     if (m_debugFlag)
