@@ -21,7 +21,9 @@ Tile Ground 18 0
 Tile Ground 19 0
 Tile Ground 20 0
 Tile Brick 7 4
+Tile QuestionFull 8 4
 Tile Brick 9 4
+Tile QuestionFull 10 4
 Tile Brick 11 4
 Tile Block 17 1
 Tile Block 17 2
@@ -29,4 +31,5 @@ Tile Block 17 3
 Tile Ground 23 0
 Tile Ground 24 0
 Tile Ground 25 0
+Tile Coin 11 6
 Player 2 6 30 63 3 -10 10 0.75 Buster

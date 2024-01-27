@@ -161,9 +161,12 @@ void Scene_Play::sMovement()
 
     // player CInput
     auto& pInput = m_player->getComponent<CInput>();
+    auto& pState = m_player->getComponent<CState>();
 
     m_player->getComponent<CTransform>().prevPos = m_player->getComponent<CTransform>().pos;
 
+
+    // TODO: Physics will change based on air or ground states
     if (pInput.up)
     {
         py += m_playerConfig.JUMP;
@@ -200,18 +203,23 @@ void Scene_Play::sMovement()
         if (px > 0)
             px -= 1.0;
     }
-    //if (pInput.down) { playerVelocity.y = 3; }
+    // The above login sometimes left a small drift in either direction when no inputs where current
+    // This will zero off those small drifts
+    if (pInput.right == false && pInput.left == false)
+    {
+        if ((px > -0.1 && px <= -0.5)  || (px > 0.1 && px <= 0.5))
+            px = 0;
+        m_player->addComponent<CState>().state = "Stand";
+    }
 
-    // Terminal velocity is max speed * 8
+    // Max jump speed is MAXSPEED * 1.5
     if (std::abs(py) > (float)m_playerConfig.MAXSPEED * 1.5)
     {
         if (py < 0)
         py = (float) -m_playerConfig.MAXSPEED * 1.5;
-
-    //    if (py > 0)
-    //        py = m_playerConfig.MAXSPEED * 5;
     }
 
+    // Max x speed direction
     if (std::abs(px) > m_playerConfig.MAXSPEED)
     {
         if (px < 0)
@@ -223,11 +231,6 @@ void Scene_Play::sMovement()
     Vec2 playerVelocity(px, py);
 
     m_player->getComponent<CTransform>().velocity = playerVelocity;
-
-    if (playerVelocity.x == 0 && pInput.right == false && pInput.left == false)
-    {
-        m_player->addComponent<CState>().state = "Stand";
-    }
 
     for (auto e : m_entityManager.getEntities())
     {
@@ -364,6 +367,7 @@ void Scene_Play::sDoAction(const Action& action)
 
         // player actions
         auto& comp = m_player->getComponent<CInput>();
+        auto& pState = m_player->getComponent<CState>().state;
 
         if (action.name() == "UP") 
         { 
@@ -373,12 +377,14 @@ void Scene_Play::sDoAction(const Action& action)
         if (action.name() == "LEFT") 
         {
             m_player->getComponent<CInput>().left = true;  
-            m_player->addComponent<CState>().state = "Run";
+            //m_player->addComponent<CState>().state = "Run";
+            pState = "Run";
         }
         if (action.name() == "RIGHT") 
         {  
             m_player->getComponent<CInput>().right = true;
-            m_player->addComponent<CState>().state = "Run";
+            //m_player->addComponent<CState>().state = "Run";
+            pState = "Run";
         }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
     }
@@ -420,9 +426,9 @@ void Scene_Play::sAnimation()
             m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
     }
 
-    if (m_player->getComponent<CState>().state == "air")
+    if (m_player->getComponent<CState>().state == "Jump")
     {
-        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Air"), true);
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanJump"), true);
     }
 
     // TODO: set the animation of the player based on its CState component

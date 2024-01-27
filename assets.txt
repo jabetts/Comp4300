@@ -7,10 +7,15 @@ Texture MegamanRun assets/MegamanRun.png
 Texture Ground assets/Ground.png
 Texture Brick assets/Brick.png
 Texture Block assets/Block.png
+Texture QuestionFull assets/QuestionFull.png
+Texture QuestionEmpty assets/QuestionEmpty.png
+Texture MegamanJump assets/MegamanJump.png
+Texture Coin assets/Coin.png
 Font Hack assets/hack.ttf
 Font Mario assets/mario.ttf
 Animation MegamanStand MegamanStand 3 60
 Animation MegamanRun MegamanRun 3 8
+Animation MegamanJump MegamanJump 1 0
 Animation KnightRun KnightRun 6 20
 Animation KnightIdle KnightIdle 4 60
 Animation OrcIdle OrcIdle 4 60
@@ -18,3 +23,6 @@ Animation Basalt Basalt 1 0
 Animation Ground Ground 1 0
 Animation Brick Brick 1 0
 Animation Block Block 1 0
+Animation QuestionFull QuestionFull 3 30
+Animation QuestionEmpty QuestionEmpty 1 0
+Animation Coin Coin 2 15
