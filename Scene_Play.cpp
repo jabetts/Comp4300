@@ -288,6 +288,7 @@ void Scene_Play::sCollision()
 
     // First test the player is not off the left side of the map or fallen off
     Vec2& pPos = m_player->getComponent<CTransform>().pos;
+
     if (pPos.x <= 0)
     {
         pPos.x = 0.0;
@@ -302,11 +303,19 @@ void Scene_Play::sCollision()
         pPos.y = 0;
     }
 
+    // Check is player is falling, if so then the players state is jump
+    auto& pState = m_player->getComponent<CState>();
+    
+    Vec2& pVel = m_player->getComponent<CTransform>().velocity;
     // Check for tile collisions
+
+    bool collided = false;
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
+        Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
         if (p.isCollision(e, m_player))
         {
+            collided = true;
             Vec2 overlap = p.GetOverlap(e, m_player);
             Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
             float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
@@ -317,10 +326,8 @@ void Scene_Play::sCollision()
             Vec2& pbox = m_player->getComponent<CBoundingBox>().size;
             Vec2& pVel = m_player->getComponent<CTransform>().velocity;
 
-            auto& pState = m_player->getComponent<CState>();
-
-            if (pState.state != "Ground")
-                pState.state = "Jump";
+            //if (pState.state != "Ground")
+            //    pState.state = "Jump";
 
             if (m_collisions)
             {
@@ -419,27 +426,24 @@ void Scene_Play::sDoAction(const Action& action)
 
 void Scene_Play::sAnimation()
 {
-    // TODO: Complete the Animation class first
-
     // Player animations
-    auto& const comp = m_player->getComponent<CState>();
+    auto& const pState = m_player->getComponent<CState>();
     auto& const currentAnim = m_player->getComponent<CAnimation>();
     auto& const pVel = m_player->getComponent<CTransform>().velocity;
 
-    if (comp.state == "Ground")
+    if (pState.state == "Ground")
     {
         if (pVel.x != 0)
         {
             if (currentAnim.animation.getName() != "MegamanRun")
-                m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);      
+                m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanRun"), true);
         }
         else
         {
             m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanStand"), true);
         }
     }
-
-    if (m_player->getComponent<CState>().state == "Jump")
+    if (pState.state == "Jump")
     {
         m_player->addComponent<CAnimation>(m_game->assets().getAnimation("MegamanJump"), true);
     }
@@ -454,7 +458,6 @@ void Scene_Play::sAnimation()
             e->getComponent<CAnimation>().animation.update();
         }
     }
-   
 }
 
 void Scene_Play::onEnd()
