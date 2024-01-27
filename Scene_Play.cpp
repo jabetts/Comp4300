@@ -150,8 +150,14 @@ void Scene_Play::sMovement()
     // TODO: Implement gravity's effect on the player
     // TODO: Implement the maximum player speed in both the X and Y directions
 
-    float px =  m_player->getComponent<CTransform>().velocity.x;
+    float px = m_player->getComponent<CTransform>().velocity.x;
     float py = m_player->getComponent<CTransform>().velocity.y;
+
+    std::string s = "vol x: " +std::to_string((float)px) + " vol y : " + std::to_string((float)py);
+    m_debugText.setString(s);
+    m_debugText.setFont(m_game->assets().getFont("Hack"));
+    m_debugText.setCharacterSize(25);
+    m_debugText.setPosition(m_player->getComponent<CTransform>().pos.x, m_player->getComponent<CTransform>().pos.y - 40);
 
     // player CInput
     auto& pInput = m_player->getComponent<CInput>();
@@ -168,40 +174,44 @@ void Scene_Play::sMovement()
     }
     if (pInput.left)
     {
-        px -= m_playerConfig.SPEED;
+        if (px > 0)
+            px -= 1.25;
+        else
+            px -= m_playerConfig.SPEED;
     }
-    else if (pInput.left == false)
+    if (pInput.left == false)
     {
         // Decelerate
         if (px < 0)
         {
-            px += 0.5;
+            px += 1.0;
         }
     }
     if (pInput.right) 
     { 
         if (px < 0)
-            px += 0.5;
+            px += 1.25;
         else
             px += m_playerConfig.SPEED; 
     }
-    else if (pInput.right == false)
+    if (pInput.right == false)
     {
         // Decelerate
         if (px > 0)
-        {
-            px -= 0.5;
-        }
+            px -= 1.0;
     }
     //if (pInput.down) { playerVelocity.y = 3; }
 
-    if (std::abs(py) > m_playerConfig.MAXSPEED)
+    // Terminal velocity is max speed * 8
+    if (std::abs(py) > (float)m_playerConfig.MAXSPEED * 1.5)
     {
         if (py < 0)
-            py = m_playerConfig.MAXSPEED;
-        else
-            py = -m_playerConfig.MAXSPEED;
+        py = (float) -m_playerConfig.MAXSPEED * 1.5;
+
+    //    if (py > 0)
+    //        py = m_playerConfig.MAXSPEED * 5;
     }
+
     if (std::abs(px) > m_playerConfig.MAXSPEED)
     {
         if (px < 0)
@@ -214,12 +224,10 @@ void Scene_Play::sMovement()
 
     m_player->getComponent<CTransform>().velocity = playerVelocity;
 
-    if (playerVelocity.x == 0 and playerVelocity.y == 0)
+    if (playerVelocity.x == 0 && pInput.right == false && pInput.left == false)
     {
         m_player->addComponent<CState>().state = "Stand";
     }
-
-   
 
     for (auto e : m_entityManager.getEntities())
     {
@@ -227,10 +235,11 @@ void Scene_Play::sMovement()
         if (e->hasComponent<CGravity>())
         {
             e->getComponent<CTransform>().velocity.y += e->getComponent<CGravity>().gravity;
-            if (e->getComponent<CTransform>().velocity.y > m_playerConfig.MAXSPEED)
-            {
-                e->getComponent<CTransform>().velocity.y = m_playerConfig.MAXSPEED;
-            }
+            if (e->getComponent<CTransform>().velocity.y > m_playerConfig.MAXSPEED * 3)
+            //{
+                // Terminal velocity
+                e->getComponent<CTransform>().velocity.y = m_playerConfig.MAXSPEED * 3;
+            //}
         }
 
         e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
@@ -298,31 +307,43 @@ void Scene_Play::sCollision()
             float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
 
             // Crude collision resolution
-            Vec2 pPos = m_player->getComponent<CTransform>().pos;
-            Vec2 ePos = e->getComponent<CTransform>().pos;
-            Vec2 pbox = m_player->getComponent<CBoundingBox>().size;
+            Vec2& pPos = m_player->getComponent<CTransform>().pos;
+            Vec2& ePos = e->getComponent<CTransform>().pos;
+            Vec2& pbox = m_player->getComponent<CBoundingBox>().size;
+            Vec2& pVel = m_player->getComponent<CTransform>().velocity;
 
             if (m_collisions)
             {
                 // collision came from the top
                 if (pOverlap.x > 0 && pPos.y < ePos.y)
                 {
-                    m_player->getComponent<CTransform>().pos.y -= overlap.y + 1;
+                    pPos.y -= overlap.y + 1;
+                    // change velocity to 0 if standing on a tile
+                    pVel.y = 0;
+                    // Set a state
                 }
                 // collision came from the bottom
                 if (pOverlap.x > 0 && pPos.y > ePos.y)
                 {
-                    m_player->getComponent<CTransform>().pos.y += overlap.y + 1;
+                    pPos.y += overlap.y + 1;
+                    // y velocity halves if hitting from below
+                    pVel.y -= pVel.y / 2;
+
                 }
                 // collision came from the left.
                 if (pOverlap.y > 0 && pPos.x < ePos.x)
                 {
-                    m_player->getComponent<CTransform>().pos.x -= overlap.x + 1;           
+                    pPos.x -= overlap.x + 1;
+ 
+                    // stop x direction if hitting a tile
+                    // TODO: If in the air do not 0 velocity by maybe half it..
+                    pVel.x = 0;
                 }
                 // collision came from the right.
                 if (pOverlap.y > 0 && pPos.x > ePos.x)
                 {
-                    m_player->getComponent<CTransform>().pos.x += overlap.x + 1;
+                    pPos.x += overlap.x + 1;
+                    pVel.x = 0;
                 }
             }
         }
