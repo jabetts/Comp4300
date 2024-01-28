@@ -204,6 +204,7 @@ void Scene_Play::sMovement()
                 px += 1.0;
             }
         }
+        // if jumping
         else
         {
             if (px < 0)
@@ -249,14 +250,13 @@ void Scene_Play::sMovement()
     {
         if (((px > -0.1 && px <= -0.5)  || (px > 0.1 && px <= 0.5)) && pState.state != "Jump")
             px = 0;
-        //m_player->addComponent<CState>().state = "Stand";
     }
 
     // Max jump speed is MAXSPEED * 1.5
-    if (std::abs(py) > (float)m_playerConfig.MAXSPEED * 1.5)
+    if (std::abs(py) > (float)m_playerConfig.MAXSPEED * 1.6)
     {
         if (py < 0)
-        py = (float) -m_playerConfig.MAXSPEED * 1.5;
+        py = (float) -m_playerConfig.MAXSPEED * 1.6;
     }
 
     // Max x speed direction
@@ -384,6 +384,10 @@ void Scene_Play::sCollision()
                     pPos.y += overlap.y;
                     // y velocity halves if hitting from below
                     pVel.y -= pVel.y / 2;
+                    if (e->isActive())
+                    {
+                        e->destroy();
+                    }
 
                 }
                 // collision came from the left.

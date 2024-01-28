@@ -11,9 +11,15 @@ void EntityManager::removeDeadEntities(EntityVec& Vec)
 {
 	// remove all dead entities from the input vector
 	// this is called by the update() function
-	auto erased = std::erase_if(Vec, [](auto& e) {
-		return !e->isActive();});
-}
+
+	auto erase = std::erase_if(Vec, [](auto& e) {
+		return !e->isActive();
+		});
+	auto erased = std::erase_if(m_entities, [](auto& e) {
+		return !e->isActive();
+		});
+
+}	
 
 void EntityManager::update()
 {
