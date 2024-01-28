@@ -334,7 +334,7 @@ void Scene_Play::sCollision()
                 // collision came from the top
                 if (pOverlap.x > 0 && pPos.y < ePos.y)
                 {
-                    pPos.y -= overlap.y + 1;
+                    pPos.y -= overlap.y;
                     // change velocity to 0 if standing on a tile
                     pVel.y = 0;
                     // Set players state to can jump as they have landed
@@ -345,7 +345,7 @@ void Scene_Play::sCollision()
                 // collision came from the bottom
                 if (pOverlap.x > 0 && pPos.y > ePos.y)
                 {
-                    pPos.y += overlap.y + 1;
+                    pPos.y += overlap.y;
                     // y velocity halves if hitting from below
                     pVel.y -= pVel.y / 2;
 
@@ -353,7 +353,7 @@ void Scene_Play::sCollision()
                 // collision came from the left.
                 if (pOverlap.y > 0 && pPos.x < ePos.x)
                 {
-                    pPos.x -= overlap.x + 1;
+                    pPos.x -= overlap.x;
  
                     // stop x direction if hitting a tile
                     // TODO: If in the air do not 0 velocity by maybe half it..
@@ -362,10 +362,15 @@ void Scene_Play::sCollision()
                 // collision came from the right.
                 if (pOverlap.y > 0 && pPos.x > ePos.x)
                 {
-                    pPos.x += overlap.x + 1;
+                    pPos.x += overlap.x;
                     pVel.x = 0;
                 }
             }
+        }
+        if (collided == false)
+        {
+            pState.state = "Jump";
+            m_player->getComponent<CInput>().canJump = false;
         }
     }
 }
