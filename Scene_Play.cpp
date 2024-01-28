@@ -384,9 +384,10 @@ void Scene_Play::sCollision()
                     pPos.y += overlap.y;
                     // y velocity halves if hitting from below
                     pVel.y -= pVel.y / 2;
-                    if (e->isActive())
+                    if (e->isActive() && e->getComponent<CAnimation>().animation.getName() == "Brick")
                     {
-                        e->destroy();
+                        if (pVel.y < 5)
+                            e->destroy();
                     }
 
                 }
