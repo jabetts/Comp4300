@@ -179,31 +179,69 @@ void Scene_Play::sMovement()
     //}
     if (pInput.left)
     {
-        if (px > 0)
-            px -= 1.25;
+        if (pState.state == "Ground")
+        {
+            if (px > 0)
+                px -= 1.25;
+            else
+                px -= m_playerConfig.SPEED;
+        }
         else
-            px -= m_playerConfig.SPEED;
+        {
+            if (px > 0)
+                px -= 0.25;
+            else
+                px -= m_playerConfig.SPEED / 2.5f;
+        }
     }
     if (pInput.left == false)
     {
         // Decelerate
-        if (px < 0)
+        if (pState.state == "Ground")
         {
-            px += 1.0;
+            if (px < 0)
+            {
+                px += 1.0;
+            }
+        }
+        else
+        {
+            if (px < 0)
+            {
+                px += 0.5;
+            }
         }
     }
-    if (pInput.right) 
-    { 
-        if (px < 0)
-            px += 1.25;
+    if (pInput.right)
+    {
+        if (pState.state == "Ground")
+        {
+            if (px < 0)
+                px += 1.25;
+            else
+                px += m_playerConfig.SPEED;
+        }
         else
-            px += m_playerConfig.SPEED; 
+        {
+            if (px < 0)
+                px += 0.25;
+            else
+                px += m_playerConfig.SPEED / 2.5f;
+        }
     }
     if (pInput.right == false)
     {
         // Decelerate
-        if (px > 0)
-            px -= 1.0;
+        if (pState.state == "Ground")
+        {
+            if (px > 0)
+                px -= 1.0;
+        }
+        else
+        {
+            if (px > 0)
+                px -= 0.5;
+        }
     }
     // The above login sometimes left a small drift in either direction when no inputs where current
     // This will zero off those small drifts
@@ -298,6 +336,7 @@ void Scene_Play::sCollision()
         pPos = gridToMidPixel(m_playerConfig.X, m_playerConfig.Y, m_player);
     }
     // TODO: make this so the player can go up to negative halfSize of the bounding box
+    //       so it shows them off the top of the screen
     if (pPos.y <= 0)
     {
         pPos.y = 0;
@@ -326,10 +365,7 @@ void Scene_Play::sCollision()
             Vec2& pbox = m_player->getComponent<CBoundingBox>().size;
             Vec2& pVel = m_player->getComponent<CTransform>().velocity;
 
-            //if (pState.state != "Ground")
-            //    pState.state = "Jump";
-
-            if (m_collisions)
+            if (m_collisions) // Debug collisions off
             {
                 // collision came from the top
                 if (pOverlap.x > 0 && pPos.y < ePos.y)
