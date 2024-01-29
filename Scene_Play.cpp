@@ -142,6 +142,8 @@ void Scene_Play::update()
     sCollision();
     sAnimation();
     sRender();
+
+    m_currentFrame++;
 }
 
 void Scene_Play::sMovement()
@@ -302,6 +304,17 @@ void Scene_Play::sMovement()
 void Scene_Play::sLifeSpan()
 {
     // TODO: Check lifespan of entities that have them, and destroy them if they go over
+    for (auto& e : m_entityManager.getEntities())
+    {
+        if (e->hasComponent<CLifeSpan>())
+        {
+            e->getComponent<CLifeSpan>().lifespan--;
+            if (e->getComponent<CLifeSpan>().lifespan <= 0)
+            {
+                e->destroy();
+            }
+        }
+    }
 }
 
 void Scene_Play::sCollision()
@@ -311,14 +324,8 @@ void Scene_Play::sCollision()
     //           and gravity will have a positive y-component
     //           Also, something BELOW something else will have a y value GREATER than it
 
-
     // TODO: Implement bullet / tile collisions
     //       Destroy the tile if it has a brick animation
-    // TODO: Implement the player / tile collision and resolutions
-    //       Update the CState componenet of the player to store whether
-    //       it is currently on the ground or in the air. This will be
-    //       used by the Animation system
-    // TODO: Check to see if the player has fallen down a hole (y > height())
 
     // TODO: Dont like having to create an object just to do physics, so change the physics
     //       object to just the functions available through the .h

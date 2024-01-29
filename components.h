@@ -54,6 +54,16 @@ struct CInput : Component
 	CInput() {}
 };
 
+struct CAttributes
+{
+	float gravity = 0 ;
+	float jumpTime= 0;
+	float walkAirSpeed = 0;
+	float maxSpeed = 0;
+	float maxFallSpeed = 0;
+	CAttributes() {}
+};
+
 struct CBoundingBox : public Component
 {
 	Vec2 size;
