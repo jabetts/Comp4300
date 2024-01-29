@@ -37,4 +37,4 @@ Tile Block 17 3
 Tile Ground 23 0
 Tile Ground 24 0
 Tile Ground 25 0
-Player 2 6 30 63 3 -10 10 0.75 Buster
+Player 2 6 30 63 3 -55 10 0.75 Buster

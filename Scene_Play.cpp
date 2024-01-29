@@ -68,7 +68,7 @@ void Scene_Play::loadLevel(const std::string& filename)
         if (in == "Tile")
         {
             std::string text;
-            int X, Y;
+            float X, Y;
             f >> text >> X >> Y;
             auto t = m_entityManager.addEntity("Tile");
             t->addComponent<CAnimation>(m_game->assets().getAnimation(text), true);
@@ -171,14 +171,23 @@ void Scene_Play::sMovement()
     // TODO: Physics will change based on air or ground states
     if (pInput.up)
     {
-        py += m_playerConfig.JUMP;
-        pInput.canJump = false;
-        pState.state = "Jump";
+        if (pState.state != "Jump")
+        {
+            py += m_playerConfig.JUMP;
+            pInput.canJump = false;
+            pState.state = "Jump";
+        }
     }
-    //if (pInput.up == false)
-    //{
-    //
-    //}
+    if (pInput.up == false)
+    {
+        if (pState.state == "Jump")
+        {
+            if (py < 0)
+            {
+                py += 1.0;
+            }
+        }
+    }
     if (pInput.left)
     {
         if (pState.state == "Ground")
@@ -256,11 +265,11 @@ void Scene_Play::sMovement()
             px = 0;
     }
 
-    // Max jump speed is MAXSPEED * 1.5
-    if (std::abs(py) > (float)m_playerConfig.MAXSPEED * 1.6)
+    // Max jump speed is MAXSPEED * 3
+    if (std::abs(py) > (float)m_playerConfig.MAXSPEED * 2)
     {
         if (py < 0)
-        py = (float) -m_playerConfig.MAXSPEED * 1.6;
+        py = (float) -m_playerConfig.MAXSPEED * 2;
     }
 
     // Max x speed direction
