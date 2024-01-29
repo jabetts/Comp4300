@@ -250,7 +250,9 @@ void Scene_Play::sMovement()
     // This will zero off those small drifts
     if (pInput.right == false && pInput.left == false)
     {
-        if (((px > -0.1 && px <= -0.5)  || (px > 0.1 && px <= 0.5)) && pState.state != "Jump")
+     if ((std::abs(px) > 0.01f && std::abs(px) <= 0.9f) &&
+        //if ((px >= -0.01 && px <= -0.9  || px > 0.01 && px <= 0.9) 
+            (pState.state != "Jump"))
             px = 0;
     }
 
@@ -390,11 +392,12 @@ void Scene_Play::sCollision()
                 {
                     pPos.y += overlap.y;
                     // y velocity halves if hitting from below
-                    pVel.y -= pVel.y / 2;
+                    if (pVel.y != 0 ) pVel.y = pVel.y / 6;
                     if (e->isActive() && e->getComponent<CAnimation>().animation.getName() == "Brick")
                     {
                         if (pVel.y < 5)
                             e->destroy();
+                        // TODO: brick smash animation
                     }
 
                 }
