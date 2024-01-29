@@ -6,7 +6,8 @@
 #include "Action.h"
 
 #include <iostream>
-#include<memory>
+#include <memory>
+#include <sstream>
 
 Scene_Play::Scene_Play(GameEngine* gameEngine, const std::string& levelPath)
     : Scene(gameEngine), m_levelPath(levelPath)
@@ -21,7 +22,7 @@ void Scene_Play::init(const std::string& levelPath)
     registerAction(sf::Keyboard::T,      "TOGGLE_TEXTURE");     // Toggle drawing (T)extures
     registerAction(sf::Keyboard::C,      "TOGGLE_COLLISION");   // Toggle drawing (C)ollision Boxes
     registerAction(sf::Keyboard::G,      "TOGGLE_GRID");        // Toggle drawing (G)rid
-    registerAction(sf::Keyboard::P,      "COLLISIONS");         // Toggle collisions (P)
+    registerAction(sf::Keyboard::P,      "PAUSE");              // Toggle pause (P)
     registerAction(sf::Keyboard::O,      "DEBUG");              // Toggle debug text (O)
 
     registerAction(sf::Keyboard::W,      "UP");
@@ -61,15 +62,26 @@ void Scene_Play::loadLevel(const std::string& filename)
     }
 
     std::cout << "Loading level\n";
-    std::string in;
+    //std::string in;
+    std::string line;
     
-    while (f >> in)
+    while (std::getline(f, line))
     {
+        // Skip comments
+        if (line[0] == '#')
+        {
+            continue;
+        }
+
+        std::istringstream iss(line);
+        std::string in;
+        iss >> in;
+
         if (in == "Tile")
         {
             std::string text;
             float X, Y;
-            f >> text >> X >> Y;
+            iss >> text >> X >> Y;
             auto t = m_entityManager.addEntity("Tile");
             t->addComponent<CAnimation>(m_game->assets().getAnimation(text), true);
             t->addComponent<CBoundingBox>(m_game->assets().getAnimation("Ground").getSize());
@@ -81,7 +93,7 @@ void Scene_Play::loadLevel(const std::string& filename)
         }
         else if (in == "Player")
         {
-            f >> m_playerConfig.X >> m_playerConfig.Y >> m_playerConfig.CW
+            iss >> m_playerConfig.X >> m_playerConfig.Y >> m_playerConfig.CW
                 >> m_playerConfig.CH >> m_playerConfig.SPEED >> m_playerConfig.JUMP
                 >> m_playerConfig.MAXSPEED >> m_playerConfig.GRAVITY >> m_playerConfig.WEAPON;
         }
@@ -130,6 +142,8 @@ void Scene_Play::spawnPlayer()
 void Scene_Play::spawnBullet(std::shared_ptr<Entity> entity)
 {
     // TODO: This should spawn a bullet at the given entity, going in the direction the entity is facing
+    auto b = m_entityManager.addEntity("Bullet");
+    b->addComponent<CLifeSpan>(70, m_currentFrame);
 }
 
 void Scene_Play::update()
@@ -137,10 +151,14 @@ void Scene_Play::update()
     m_entityManager.update();
 
     // TODO: implement pause functionality
-    sMovement();
-    sLifeSpan();
-    sCollision();
-    sAnimation();
+    if (!m_paused)
+    {
+        sMovement();
+        sLifeSpan();
+        sCollision();
+        sAnimation();
+    }
+
     sRender();
 
     m_currentFrame++;
@@ -468,6 +486,8 @@ void Scene_Play::sDoAction(const Action& action)
             pInput.right = true;
         }
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
+
+        if (action.name() == "PAUSE") { m_paused = !m_paused; }
         
     }
 
@@ -617,9 +637,7 @@ void Scene_Play::sRender()
             }
         }
     }
-
-    std::cout << m_player->getComponent<CState>().state << "\n";
-
+    
     // DEBUG player pos
     if (m_debugFlag)
     {

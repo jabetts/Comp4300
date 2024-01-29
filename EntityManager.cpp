@@ -13,6 +13,13 @@ void EntityManager::removeDeadEntities(EntityVec& Vec)
 	// this is called by the update() function
 
 	auto erase = std::erase_if(Vec, [](auto& e) {
+		if (!e->isActive())
+		{
+			// Debug text
+			std::cout << "Removed entity: " << e->tag() << " ["
+				<< e->getComponent<CTransform>().pos.x << ","
+				<< e->getComponent<CTransform>().pos.y << "]" << std::endl;
+		}
 		return !e->isActive();
 		});
 	auto erased = std::erase_if(m_entities, [](auto& e) {
