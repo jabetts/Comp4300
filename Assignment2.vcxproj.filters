@@ -94,9 +94,6 @@
     <Text Include="readme.txt">
       <Filter>Resource Files</Filter>
     </Text>
-    <Text Include="config.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
     <Text Include="assets.txt">
       <Filter>Resource Files</Filter>
     </Text>

@@ -379,9 +379,9 @@ void Scene_Play::sCollision()
     }
     // TODO: make this so the player can go up to negative halfSize of the bounding box
     //       so it shows them off the top of the screen
-    if (pPos.y <= 0)
+    if (pPos.y <= 0 - m_player->getComponent<CAnimation>().animation.getSize().y)
     {
-        pPos.y = 0;
+        pPos.y = 0 - m_player->getComponent<CAnimation>().animation.getSize().y;
     }
 
     // Check is player is falling, if so then the players state is jump

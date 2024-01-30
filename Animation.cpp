@@ -53,7 +53,8 @@ void Animation::update()
 
 bool Animation::hasEnded() const
 {
-	// TODO: detect when animation has ended (last frame was played) and return true
+	if (m_frameCount > 0)
+		if (m_currentFrame > m_frameCount) return true;
 	return false;
 }
 

@@ -177,7 +177,6 @@
   <ItemGroup>
     <Text Include="assets.txt" />
     <Text Include="assets\Terms.txt" />
-    <Text Include="config.txt" />
     <Text Include="level1.txt" />
     <Text Include="readme.txt" />
   </ItemGroup>

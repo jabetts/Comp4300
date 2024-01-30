@@ -61,6 +61,8 @@ struct CAttributes
 	float walkAirSpeed = 0;
 	float maxSpeed = 0;
 	float maxFallSpeed = 0;
+	bool animLoop = true;
+
 	CAttributes() {}
 };
 

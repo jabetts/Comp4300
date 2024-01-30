@@ -16,6 +16,10 @@ Texture PipeLeftTop assets/PipeLeftTop.png
 Texture PipeRight assets/PipeRight.png
 Texture PipeRightTop assets/PipeRightTop.png
 Texture DecHillLarge assets/DecHillLarge.png
+Texture DecBushLeft assets/DecBushLeft.png
+Texture DecBushMid assets/DecBushMid.png
+Texture DecBushRight assets/DecBushRight.png
+Texture DecHillSmall assets/DecHillSmall.png
 Font Hack assets/hack.ttf
 Font Mario assets/mario.ttf
 Animation MegamanStand MegamanStand 3 60
@@ -36,3 +40,7 @@ Animation PipeLeftTop PipeLeftTop 1 0
 Animation PipeRight PipeRight 1 0
 Animation PipeRightTop PipeRightTop 1 0
 Animation DecHillLarge DecHillLarge 1 0
+Animation DecBushLeft DecBushLeft 1 0
+Animation DecBushMid DecBushMid 1 0
+Animation DecBushRight DecBushRight 1 0
+Animation DecHillSmall DecHillSmall 1 0

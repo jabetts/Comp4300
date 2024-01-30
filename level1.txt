@@ -3,6 +3,21 @@
 ##### Hill decoration 1 #####
 Dec DecHillLarge 0 1
 
+##### Bush 1 #####
+Dec DecBushLeft 11 1
+Dec DecBushMid 12 1
+Dec DecBushMid 13 1
+Dec DecBushMid 14 1
+Dec DecBushRight 15 1
+
+##### Bush 2 #####
+Dec DecBushLeft 24 1
+Dec DecBushMid 25 1
+Dec DecBushRight 26 1
+
+##### Small hill 1 #####
+Dec DecHillSmall 16 1
+
 ##### First section #####
 Tile QuestionFull 17 4
 Tile Brick 21 4
@@ -26,7 +41,7 @@ Tile PipeRight 39 1
 Tile PipeRight 39 2
 Tile PipeRightTop 39 3
 
-##### Dec decoration 2 #####
+##### Hill decoration 2 #####
 Dec DecHillLarge 48 1
 
 Dec DecHillLarge 0 1
