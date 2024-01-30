@@ -1,6 +1,9 @@
 #Start of file
 
-##### First pyramid section #####
+##### Hill decoration 1 #####
+Dec DecHillLarge 0 1
+
+##### First section #####
 Tile QuestionFull 17 4
 Tile Brick 21 4
 Tile QuestionFull 22 4
@@ -9,32 +12,49 @@ Tile QuestionFull 24 4
 Tile Brick 25 4
 Tile QuestionFull 23 8
 
-##### First pipe #####
-Tile PipeLeft 29 2
-Tile PipeRight 30 2
-Tile PipeLeftTop 29 3
-Tile PipeRightTop 30 3
+##### Pipe 1 #####
+Tile PipeLeft 29 1
+Tile PipeRight 30 1
+Tile PipeLeftTop 29 2
+Tile PipeRightTop 30 2
 
-#### Second pipe #####
+#### Pipe 2 #####
+Tile PipeLeft 38 1
 Tile PipeLeft 38 2
-Tile PipeLeft 38 3
-Tile PipeLeftTop 38 4
+Tile PipeLeftTop 38 3
+Tile PipeRight 39 1
 Tile PipeRight 39 2
-Tile PipeRight 39 3
-Tile PipeRightTop 39 4
+Tile PipeRightTop 39 3
 
-##### Third Pipe #####
+##### Dec decoration 2 #####
+Dec DecHillLarge 48 1
+
+Dec DecHillLarge 0 1
+##### Pipe 3 #####
+Tile PipeLeft 46 1
 Tile PipeLeft 46 2
+Tile PipeLeft 46 3
+Tile PipeLeftTop 46 4
+Tile PipeRight 47 1
 Tile PipeRight 47 2
+Tile PipeRight 47 3
+Tile PipeRightTop 47 4
 
+##### Pipe 4 #####
+Tile PipeLeft 57 1
 Tile PipeLeft 57 2
+Tile PipeLeft 57 3
+Tile PipeLeftTop 57 4
+Tile PipeRight 58 1
 Tile PipeRight 58 2
+Tile PipeRight 58 3
+Tile PipeRightTop 58 4
 
+##### Section 2 #####
 Tile Brick 77 4
 Tile QuestionFull 78 4
 Tile Brick 79 4
-Tile Brick 78 8
-Tile Brick 79 8
+
 Tile Brick 80 8
 Tile Brick 81 8
 Tile Brick 82 8
@@ -43,8 +63,13 @@ Tile Brick 84 8
 Tile Brick 85 8
 Tile Brick 86 8
 Tile Brick 87 8
-Tile Brick 88 8
-Tile Brick 89 8
+#Tile Brick 88 8
+
+Tile Brick 92 8
+Tile Brick 93 8
+Tile Brick 94 8
+Tile QuestionFull 95 8
+Tile Brick 95 4
 
 ##### Level ground #####
 Tile Ground 0 0
@@ -138,5 +163,10 @@ Tile Ground 86 0
 
 
 Tile Ground 90 0
+Tile Ground 91 0
+Tile Ground 92 0
+Tile Ground 93 0
+Tile Ground 94 0
+Tile Ground 95 0
 # Player --------
 Player 2 6 30 63 3 -55 11.1 0.75 Buster

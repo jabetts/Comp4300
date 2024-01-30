@@ -89,6 +89,12 @@ void Scene_Play::loadLevel(const std::string& filename)
         }
         else if (in == "Dec")
         {
+            std::string text;
+            float X, Y;
+            iss >> text >> X >> Y;
+            auto t = m_entityManager.addEntity("Dec");
+            t->addComponent<CAnimation>(m_game->assets().getAnimation(text), true);
+            t->addComponent<CTransform>(gridToMidPixel(X, Y, t));
 
         }
         else if (in == "Player")
@@ -559,8 +565,8 @@ void Scene_Play::onEnd()
 void Scene_Play::sRender()
 {
     // TODO: color the background darker so you know that the game is paused
-    if (!m_paused) { m_game->window().clear(sf::Color(100, 100, 255)); }
-    else { m_game->window().clear(sf::Color(75, 75, 75)); }
+    if (!m_paused) { m_game->window().clear(sf::Color(148, 148, 255)); }
+    else { m_game->window().clear(sf::Color(148, 148, 255)); }
 
     // set the viewport of the window to be centered on the player if it's far enough right
     auto& pPos = m_player->getComponent<CTransform>().pos;

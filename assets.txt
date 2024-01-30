@@ -11,6 +11,11 @@ Texture QuestionFull assets/QuestionFull.png
 Texture QuestionEmpty assets/QuestionEmpty.png
 Texture MegamanJump assets/MegamanJump.png
 Texture Coin assets/Coin.png
+Texture PipeLeft assets/PipeLeft.png
+Texture PipeLeftTop assets/PipeLeftTop.png
+Texture PipeRight assets/PipeRight.png
+Texture PipeRightTop assets/PipeRightTop.png
+Texture DecHillLarge assets/DecHillLarge.png
 Font Hack assets/hack.ttf
 Font Mario assets/mario.ttf
 Animation MegamanStand MegamanStand 3 60
@@ -26,3 +31,8 @@ Animation Block Block 1 0
 Animation QuestionFull QuestionFull 3 30
 Animation QuestionEmpty QuestionEmpty 1 0
 Animation Coin CoinSpin 2 15
+Animation PipeLeft PipeLeft 1 0
+Animation PipeLeftTop PipeLeftTop 1 0
+Animation PipeRight PipeRight 1 0
+Animation PipeRightTop PipeRightTop 1 0
+Animation DecHillLarge DecHillLarge 1 0
