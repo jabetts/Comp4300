@@ -432,8 +432,6 @@ void Scene_Play::sCollision()
                         if (pVel.y < 5)
                         {
                             e->destroy();
-                            //e->addComponent<CLifeSpan>(3, m_currentFrame);
-                            //e->getComponent<CTransform>().velocity.y = -8.0f;
                         }
                         // brick smash animation
                         float angle = 180;
@@ -445,13 +443,11 @@ void Scene_Play::sCollision()
                             Vec2 scale(1.0, 1.0);
                             auto b = m_entityManager.addEntity("Dec");
                             b->addComponent<CAnimation>(m_game->assets().getAnimation("DecBrickSmall"), true);
-                            //b->getComponent<CAnimation>().animation.getSprite().setScale(sf::Vector2f(0.25, 0.25));
                             b->addComponent<CLifeSpan>(30, m_currentFrame);
                             b->addComponent<CGravity>(0.25);
                             b->addComponent<CTransform>(e->getComponent<CTransform>().pos, velocity, scale, 0);
                             angle += step;
                         }
-                        
                     }
                     else if(animation.getName() == "QuestionFull")
                     {
@@ -459,12 +455,18 @@ void Scene_Play::sCollision()
                         e->addComponent<CAnimation>(m_game->assets().getAnimation("QuestionEmpty"), true);
 
                         // Spawn coin
+                        Vec2 pos = e->getComponent<CTransform>().pos;
+                        pos.y -= 64;
                         auto t = m_entityManager.addEntity("Dec");
                         t->addComponent<CAnimation>(m_game->assets().getAnimation("DecCoin"), true);
-                        t->addComponent<CLifeSpan>(20, m_currentFrame);
-                        t->addComponent<CTransform>(e->getComponent<CTransform>().pos);
+                        t->addComponent<CLifeSpan>(30, m_currentFrame);
+                        t->addComponent<CTransform>(pos);
                         t->getComponent<CTransform>().velocity.y = -6.0f;
-
+                    }
+                    else if (animation.getName() == "BrickSpecial")
+                    {
+                        e->removeComponent<CBoundingBox>();
+                        e->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), false);
                     }
                 }
                 // collision came from the left.
@@ -580,6 +582,13 @@ void Scene_Play::sAnimation()
         if (e->hasComponent<CAnimation>())
         {
             e->getComponent<CAnimation>().animation.update();
+            if (!e->getComponent<CAnimation>().repeat)
+            {
+                if (e->getComponent<CAnimation>().animation.hasEnded())
+                {
+                    e->destroy();
+                }
+            }
         }
     }
 }

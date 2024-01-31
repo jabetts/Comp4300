@@ -1,5 +1,8 @@
 #Start of file
 
+## Explostion test
+Tile BrickSpecial 3 4
+
 ##### Hill decoration 1 #####
 Dec DecHillLarge 0 1
 
