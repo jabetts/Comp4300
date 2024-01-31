@@ -393,6 +393,7 @@ void Scene_Play::sCollision()
     bool collided = false;
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
+        auto& animation = e->getComponent<CAnimation>().animation;
         Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
         if (p.isCollision(e, m_player))
         {
@@ -426,13 +427,45 @@ void Scene_Play::sCollision()
                     pPos.y += overlap.y;
                     // y velocity halves if hitting from below
                     if (pVel.y != 0 ) pVel.y = pVel.y / 6;
-                    if (e->isActive() && e->getComponent<CAnimation>().animation.getName() == "Brick")
+                    if (e->isActive() && animation.getName() == "Brick")
                     {
                         if (pVel.y < 5)
+                        {
                             e->destroy();
-                        // TODO: brick smash animation
+                            //e->addComponent<CLifeSpan>(3, m_currentFrame);
+                            //e->getComponent<CTransform>().velocity.y = -8.0f;
+                        }
+                        // brick smash animation
+                        float angle = 180;
+                        float step = 60;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            float rad = angle * (3.14159265 / 180.0);
+                            Vec2 velocity(5 * cos(rad), 5 * sin(rad));
+                            Vec2 scale(1.0, 1.0);
+                            auto b = m_entityManager.addEntity("Dec");
+                            b->addComponent<CAnimation>(m_game->assets().getAnimation("DecBrickSmall"), true);
+                            //b->getComponent<CAnimation>().animation.getSprite().setScale(sf::Vector2f(0.25, 0.25));
+                            b->addComponent<CLifeSpan>(30, m_currentFrame);
+                            b->addComponent<CGravity>(0.25);
+                            b->addComponent<CTransform>(e->getComponent<CTransform>().pos, velocity, scale, 0);
+                            angle += step;
+                        }
+                        
                     }
+                    else if(animation.getName() == "QuestionFull")
+                    {
+                        // TODO: spawn coin
+                        e->addComponent<CAnimation>(m_game->assets().getAnimation("QuestionEmpty"), true);
 
+                        // Spawn coin
+                        auto t = m_entityManager.addEntity("Dec");
+                        t->addComponent<CAnimation>(m_game->assets().getAnimation("DecCoin"), true);
+                        t->addComponent<CLifeSpan>(20, m_currentFrame);
+                        t->addComponent<CTransform>(e->getComponent<CTransform>().pos);
+                        t->getComponent<CTransform>().velocity.y = -6.0f;
+
+                    }
                 }
                 // collision came from the left.
                 if (pOverlap.y > 0 && pPos.x < ePos.x)
@@ -540,7 +573,7 @@ void Scene_Play::sAnimation()
     }
 
     // TODO: set the animation of the player based on its CState component
-    // TODO: for each entity with an animation, call entitiy->getComponent<CAnimation>().animaiton.update()
+    // TODO: for each entity with an animation, call entitiy->getComponent<CAnimation>().animation.update()
     //       if the animation is not repeated, and it has ended, destroy the entity
     for (auto& e : m_entityManager.getEntities())
     {
