@@ -24,6 +24,7 @@ Texture DecBrickSmall assets/DecBrickSmall.png
 Texture Explosion assets/Explosion.png
 Texture DecCoin assets/DecCoin.png
 Texture GoombaAlive assets/GoombaAlive.png
+Texture Bullet assets/Bullet.png
 Font Hack assets/hack.ttf
 Font Mario assets/mario.ttf
 Animation MegamanStand MegamanStand 3 60
@@ -53,3 +54,4 @@ Animation DecBrickSmall DecBrickSmall 1 0
 Animation Explosion Explosion 12 5
 Animation BrickSpecial Brick 1 0
 Animation GoombaAlive GoombaAlive 2 20
+Animation Bullet Bullet 1 0

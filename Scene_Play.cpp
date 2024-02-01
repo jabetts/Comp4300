@@ -149,7 +149,12 @@ void Scene_Play::spawnBullet(std::shared_ptr<Entity> entity)
 {
     // TODO: This should spawn a bullet at the given entity, going in the direction the entity is facing
     auto b = m_entityManager.addEntity("Bullet");
+    b->addComponent<CAnimation>(m_game->assets().getAnimation("Bullet"), true);
     b->addComponent<CLifeSpan>(70, m_currentFrame);
+    b->addComponent<CTransform>().pos = entity->getComponent<CTransform>().pos;
+    b->addComponent<CBoundingBox>(m_game->assets().getAnimation("Bullet").getSize());
+    float direction = entity->getComponent<CAnimation>().animation.getSprite().getScale().x;
+    b->getComponent<CTransform>().velocity.x = entity->getComponent<CTransform>().velocity.x + (15 * direction);
 }
 
 void Scene_Play::update()
@@ -283,9 +288,9 @@ void Scene_Play::sMovement()
     // This will zero off those small drifts
     if (pInput.right == false && pInput.left == false)
     {
-     if ((std::abs(px) > 0.01f && std::abs(px) <= 0.9f) &&
+     if ((std::abs(px) > 0.01f && std::abs(px) <= 0.9f)) 
         //if ((px >= -0.01 && px <= -0.9  || px > 0.01 && px <= 0.9) 
-            (pState.state != "Jump"))
+           // (pState.state != "Jump"))
             px = 0;
     }
 
@@ -391,10 +396,27 @@ void Scene_Play::sCollision()
     // Check for tile collisions
 
     bool collided = false;
+    
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
         auto& animation = e->getComponent<CAnimation>().animation;
         Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
+
+        for (auto& b : m_entityManager.getEntities("Bullet"))
+        {
+            if (p.isCollision(e, b))
+            {
+                b->destroy();
+
+                if (animation.getName() == "Brick" ||
+                    animation.getName() == "BrickSpecial")
+                {
+                    e->removeComponent<CBoundingBox>();
+                    e->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), false);
+                }
+            }
+        }
+        
         if (p.isCollision(e, m_player))
         {
             collided = true;
@@ -443,15 +465,14 @@ void Scene_Play::sCollision()
                             Vec2 scale(1.0, 1.0);
                             auto b = m_entityManager.addEntity("Dec");
                             b->addComponent<CAnimation>(m_game->assets().getAnimation("DecBrickSmall"), true);
-                            b->addComponent<CLifeSpan>(30, m_currentFrame);
-                            b->addComponent<CGravity>(0.25);
+                            b->addComponent<CLifeSpan>(15, m_currentFrame);
+                            b->addComponent<CGravity>(0.15);
                             b->addComponent<CTransform>(e->getComponent<CTransform>().pos, velocity, scale, 0);
                             angle += step;
                         }
                     }
                     else if(animation.getName() == "QuestionFull")
                     {
-                        // TODO: spawn coin
                         e->addComponent<CAnimation>(m_game->assets().getAnimation("QuestionEmpty"), true);
 
                         // Spawn coin
@@ -475,7 +496,6 @@ void Scene_Play::sCollision()
                     pPos.x -= overlap.x;
  
                     // stop x direction if hitting a tile
-                    // TODO: If in the air do not 0 velocity by maybe half it..
                     pVel.x = 0;
                 }
                 // collision came from the right.
@@ -529,6 +549,12 @@ void Scene_Play::sDoAction(const Action& action)
         if (action.name() == "DOWN") { m_player->getComponent<CInput>().down = true; }
 
         if (action.name() == "PAUSE") { m_paused = !m_paused; }
+
+        if (action.name() == "SHOOT") 
+        {
+            m_player->getComponent<CInput>().canShoot = false;
+            spawnBullet(m_player);
+        }
         
     }
 
