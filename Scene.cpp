@@ -4,10 +4,6 @@ void Scene::simulate(int i)
 {
 }
 
-//void Scene::registerAction(Action action)
-//{
-//}
-
 void Scene::setPaused(bool paused)
 {
 }

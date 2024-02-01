@@ -25,6 +25,7 @@ protected:
 	bool						m_drawGrid = false;
 	bool						m_collisions = true;
 	bool						m_debugFlag = false;
+	bool						m_losFlag = false;
 	Vec2						m_gridSize = {64, 64};
 	sf::Text					m_gridText;
 	sf::Text                    m_debugText;

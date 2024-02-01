@@ -30,8 +30,7 @@ void GameEngine::userInput()
 		if (event.type == sf::Event::KeyPressed)
 		{
 			if (event.key.code == sf::Keyboard::X)
-			{
-				
+			{	
 				// TODO: Use this to create a DOOM style melt effect
 				//       when the game engine changes scenes
 				sf::Texture texture;
@@ -41,17 +40,8 @@ void GameEngine::userInput()
 				{
 					std::cout << "screenshot saves to " << "test.png" << std::endl;
 				}
-
 			}
-			//if (event.key.code == sf::Keyboard::Tab)
-			//{
-			//	if (m_currentScene != "menu")
-			//	{
-			//		changeScene("menu", std::make_shared<Scene_Menu>(this), true);
-			//	}
-			//}
 		}
-
 		if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)
 		{
 			// if the current scene does not have an action associated with this key, skip the event
@@ -92,7 +82,6 @@ void GameEngine::quit()
 
 void GameEngine::run()
 {
-
 	while (isRunning())
 	{
 		m_sceneMap[m_currentScene]->update();

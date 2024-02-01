@@ -19,7 +19,7 @@ struct Vec2
 
 	Vec2 operator += (const Vec2& rhs);
 	Vec2 operator -= (const Vec2& rhs);
-	void operator *= (const float val);
+	Vec2 operator *= (const Vec2& rhs);
 	void operator /= (const float val);
 
 	Vec2 normalize() const;

@@ -44,9 +44,6 @@ void Scene_Menu::sRender()
 {
 	m_game->window().clear(sf::Color(33,57,125,255));
 
-	// the below formula should evenly space the menu text entries
-	// y = (1080 - 4 * 20) / 6 = 140
-
 	float textY = (float)m_game->window().getSize().y / (float)m_menuStrings.size();
 	float textYH = textY / 2.0f;
 	m_menuText.setPosition(sf::Vector2f(50, textYH));
@@ -105,7 +102,6 @@ void Scene_Menu::sDoAction(const Action& action)
 		{
 		}
 	}
-
 }
 
 void Scene_Menu::update()

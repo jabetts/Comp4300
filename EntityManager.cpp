@@ -30,9 +30,6 @@ void EntityManager::removeDeadEntities(EntityVec& Vec)
 
 void EntityManager::update()
 {
-	// TODO: add entities from the m_entitiesToAdd the proper locaction(s)
-	//       - add the to the vector of all entitities
-	//       - add them to the vector inside the map, with the tag as a key
 	for (auto & e : m_entitiesToAdd)
 	{
 		m_entities.push_back(e);
