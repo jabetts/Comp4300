@@ -38,6 +38,17 @@ void Scene_Play::init(const std::string& levelPath)
     loadLevel(levelPath);
 }
 
+// If pos is inside the entity
+bool IsInside(Vec2 pos, std::shared_ptr<Entity> e)
+{
+    auto ePos = e->getComponent<CTransform>().pos;
+    auto size = e->getComponent<CAnimation>().animation.getSize();
+    float dx = fabs(pos.x - ePos.x);
+    float dy = fabs(pos.y - ePos.y);
+
+    return (dx <= size.x / 2) && (dy <= size.y / 2);
+}
+
 void Scene_Play::loadLevel(const std::string& filename)
 {
     // TODO: read in the level file and add the appropriate entities
@@ -83,6 +94,7 @@ void Scene_Play::loadLevel(const std::string& filename)
             t->addComponent<CAnimation>(m_game->assets().getAnimation(text), true);
             t->addComponent<CBoundingBox>(m_game->assets().getAnimation("Ground").getSize());
             t->addComponent<CTransform>(gridToMidPixel(X, Y, t));
+            t->addComponent<CDraggable>();
         }
         else if (in == "Dec")
         {
@@ -119,6 +131,16 @@ Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity
     return Vec2(pixelX, pixelY);
 }
 
+Vec2 Scene_Play::windowToWorld(const Vec2& window) const
+{
+    auto& view = m_game->window().getView();
+
+    float wx = view.getCenter().x - m_game->window().getSize().x / 2;
+    float wy = view.getCenter().y - m_game->window().getSize().y / 2;
+
+    return Vec2(window.x + wx, window.y + wy);
+}
+
 void Scene_Play::spawnPlayer()
 {
     m_player = m_entityManager.addEntity("Player");
@@ -153,9 +175,10 @@ void Scene_Play::update()
         sLifeSpan();
         sCollision();
         sAnimation();
+        sDrag();
     }
-    sRender();
     m_currentFrame++;
+    sRender();
 }
 
 void Scene_Play::sMovement()
@@ -485,25 +508,41 @@ void Scene_Play::sDoAction(const Action& action)
 {
     if (action.type() == "START")
     {
-        if (action.name() == "TOGGLE_TEXTURE") { m_drawTextures = !m_drawTextures; }
+        // non game play actions
+        if      (action.name() == "TOGGLE_TEXTURE")   { m_drawTextures = !m_drawTextures; }
         else if (action.name() == "TOGGLE_COLLISION") { m_drawCollision = !m_drawCollision; }
-        else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; std::cout << "Grid " << (m_drawGrid ? "On\n" : "Off\n"); }
-        else if (action.name() == "PAUSE") { setPaused(!m_paused); }
-        else if (action.name() == "QUIT") { onEnd(); }
-        else if (action.name() == "COLLISIONS") { m_collisions = !m_collisions; }
-        else if (action.name() == "DEBUG") { m_debugFlag = !m_debugFlag; }
+        else if (action.name() == "TOGGLE_GRID")      { m_drawGrid = !m_drawGrid; std::cout << "Grid " << (m_drawGrid ? "On\n" : "Off\n"); }
+        else if (action.name() == "PAUSE")            { setPaused(!m_paused); }
+        else if (action.name() == "QUIT")             { onEnd(); }
+        else if (action.name() == "COLLISIONS")       { m_collisions = !m_collisions; }
+        else if (action.name() == "DEBUG")            { m_debugFlag = !m_debugFlag; }
 
+        // mouse actions
         else if (action.name() == "LEFT_CLICK")
         {
-            std::cout << "Mouse Left Click: " << action.pos().x << " " << action.pos().y << std::endl;
+            Vec2 worldPos = windowToWorld(action.pos());
+            
+            for (auto e : m_entityManager.getEntities())
+            {
+                if (e->hasComponent<CDraggable>() && IsInside(worldPos, e))
+                {
+                    std::cout << e->getComponent<CAnimation>().animation.getName() << std::endl;
+                    e->getComponent<CDraggable>().dragging = !e->getComponent<CDraggable>().dragging;
+                }
+            }
         }
         else if (action.name() == "RIGHT_CLICK")
         {
-            std::cout << "Mouse Right Click: " << action.pos().x << " " << action.pos().y << std::endl;
+       
         }
         else if (action.name() == "MIDDLE_CLICK")
         {
-            std::cout << "Mouse Middle Click: " << action.pos().x << " " << action.pos().y << std::endl;
+   
+        }
+        else if (action.name() == "MOUSE_MOVE")
+        {
+            m_mPos = action.pos();
+            Vec2 worldPos = windowToWorld(m_mPos);
         }
 
         // player actions
@@ -712,6 +751,20 @@ void Scene_Play::sRender()
 
 void Scene_Play::sDebug()
 {
+}
+
+void Scene_Play::sDrag()
+{
+    for (auto e : m_entityManager.getEntities())
+    {
+        if (e->hasComponent<CDraggable>() && e->getComponent<CDraggable>().dragging)
+        {
+            Vec2 worldPos = windowToWorld(m_mPos);
+            e->getComponent<CTransform>().pos = worldPos;
+            std::cout << "Dragging: " << e->getComponent<CAnimation>().animation.getName() 
+                << " [" << m_mPos.x << "][" << m_mPos.y <<"]" << std::endl;
+        }
+    }
 }
 
 void Scene_Play::sEnemySpawner()

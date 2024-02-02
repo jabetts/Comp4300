@@ -30,6 +30,8 @@ protected:
 	sf::Text					m_gridText;
 	sf::Text                    m_debugText;
 	std::string                 m_debugString;
+	Vec2						m_mPos;
+	sf::CircleShape             m_shape;
 
 	void init(const std::string& levelPath);
 	void loadLevel(const std::string& filename);
@@ -40,7 +42,9 @@ protected:
 	void sCollision();
 	void sLifeSpan();
 	void sDebug();
+	void sDrag();
 	Vec2 gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity);
+	Vec2 windowToWorld(const Vec2& window) const;
 
 	void spawnPlayer();
 	void spawnBullet(std::shared_ptr<Entity> entity);

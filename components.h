@@ -10,6 +10,13 @@ struct Component
 	bool has = false;
 };
 
+struct CDraggable : public Component
+{
+	bool dragging = false;
+	CDraggable() {}
+	CDraggable(bool dragging) : dragging(dragging) {}
+};
+
 struct CTransform : public Component
 {
 	Vec2 pos		= { 0.0, 0.0 };
