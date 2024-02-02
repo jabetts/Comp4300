@@ -176,7 +176,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="assets.txt" />
-    <Text Include="assets\Terms.txt" />
     <Text Include="level1.txt" />
     <Text Include="readme.txt" />
   </ItemGroup>
@@ -190,10 +189,6 @@
   <ItemGroup>
     <Font Include="assets\Hack.ttf" />
     <Font Include="assets\mario.ttf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\mario-tiles.webp" />
-    <None Include="assets\MegamanRun.png.pyxel" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

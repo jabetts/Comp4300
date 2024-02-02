@@ -493,6 +493,19 @@ void Scene_Play::sDoAction(const Action& action)
         else if (action.name() == "COLLISIONS") { m_collisions = !m_collisions; }
         else if (action.name() == "DEBUG") { m_debugFlag = !m_debugFlag; }
 
+        else if (action.name() == "LEFT_CLICK")
+        {
+            std::cout << "Mouse Left Click: " << action.pos().x << " " << action.pos().y << std::endl;
+        }
+        else if (action.name() == "RIGHT_CLICK")
+        {
+            std::cout << "Mouse Right Click: " << action.pos().x << " " << action.pos().y << std::endl;
+        }
+        else if (action.name() == "MIDDLE_CLICK")
+        {
+            std::cout << "Mouse Middle Click: " << action.pos().x << " " << action.pos().y << std::endl;
+        }
+
         // player actions
         auto& pInput = m_player->getComponent<CInput>();
         auto& pState = m_player->getComponent<CState>().state;
