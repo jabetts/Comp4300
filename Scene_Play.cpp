@@ -384,6 +384,10 @@ void Scene_Play::sCollision()
     for (auto& e : m_entityManager.getEntities("Tile"))
     {   
         auto& animation = e->getComponent<CAnimation>().animation;
+
+        //if (animation.getName() == "Dec") continue;
+        //if (animation.getName() == "Bullet") continue;
+
         Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
 
         // testing for bullet collisions first
@@ -413,7 +417,7 @@ void Scene_Play::sCollision()
             collided = true;
             Vec2 overlap = p.GetOverlap(e, m_player);
             Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
-            float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
+            //float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
 
             Vec2& pPos = m_player->getComponent<CTransform>().pos;
             Vec2& ePos = e->getComponent<CTransform>().pos;
@@ -426,15 +430,20 @@ void Scene_Play::sCollision()
                 if (pOverlap.x > 0 && pPos.y < ePos.y)
                 {
                     pPos.y -= overlap.y;
-                    // change velocity to 0 if standing on a tile
                     pVel.y = 0;
-                    // Set players state to can jump as they have landed
                     m_player->getComponent<CInput>().canJump = true;
-                    
                     pState.state = "Ground";
+                    std::cout << "From top\n";
+                    if (overlap.y == overlap.x)
+                    {
+                        std::cout << "Both\n";
+                    }
+
+                    // change velocity to 0 if standing on a tile
+                    // Set players state to can jump as they have landed
                 }
                 // collision came from the bottom
-                if (pOverlap.x > 0 && pPos.y > ePos.y)
+                else if (pOverlap.x > 0 && pPos.y > ePos.y)
                 {
                     pPos.y += overlap.y;
                     // y velocity halves if hitting from below
@@ -481,17 +490,18 @@ void Scene_Play::sCollision()
                     }
                 }
                 // collision came from the left.
-                if (pOverlap.y > 0 && pPos.x < ePos.x)
+                else if (pOverlap.y > 0 && pPos.x < ePos.x)
                 {
-                    pPos.x -= overlap.x;
+                    std::cout << "From left\n";
+                    pPos.x -= overlap.x + 1;
  
                     // stop x direction if hitting a tile
                     pVel.x = 0;
                 }
                 // collision came from the right.
-                if (pOverlap.y > 0 && pPos.x > ePos.x)
+                else if (pOverlap.y > 0 && pPos.x > ePos.x)
                 {
-                    pPos.x += overlap.x;
+                    pPos.x += overlap.x + 1;
                     pVel.x = 0;
                 }
             }
