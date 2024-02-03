@@ -391,10 +391,9 @@ void Scene_Play::sCollision()
         Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
 
         // testing for bullet collisions first
-        // TODO: Currently a bug where a bullet can slip between 2 tiles
         for (auto& b : m_entityManager.getEntities("Bullet"))
         {
-            if (p.isCollision(e, b))
+            if (p.isPointCollision(e, b))
             {
                 b->destroy();
 
@@ -406,18 +405,11 @@ void Scene_Play::sCollision()
                 }
             }
         }
-        
-        // Testing for collisons with the player
-
-        // TODO: There is currently a big where the collision happens in the top corner
-        //       of a tile, if still running forward the player will get 'stuck' and keep
-        //       rubber banding between stuck between the y and x axis
+        // Testing tile collision with the player
         if (p.isCollision(e, m_player))
         {
             collided = true;
             Vec2 overlap = p.GetOverlap(e, m_player);
-            Vec2 pOverlap = p.GetPreviousOverlap(e, m_player);
-            //float h = (overlap.x > overlap.y) ? overlap.y : overlap.x;
 
             Vec2& pPos = m_player->getComponent<CTransform>().pos;
             Vec2& ePos = e->getComponent<CTransform>().pos;
@@ -433,12 +425,6 @@ void Scene_Play::sCollision()
                     pVel.y = 0;
                     m_player->getComponent<CInput>().canJump = true;
                     pState.state = "Ground";
-                    std::cout << "From top\n";
-                    if (overlap.y == overlap.x)
-                    {
-                        std::cout << "Both\n";
-                    }
-
                     // change velocity to 0 if standing on a tile
                     // Set players state to can jump as they have landed
                 }
@@ -492,9 +478,7 @@ void Scene_Play::sCollision()
                 // collision came from the left.
                 else if (pOverlap.y > 0 && pPos.x < ePos.x)
                 {
-                    std::cout << "From left\n";
                     pPos.x -= overlap.x + 1;
- 
                     // stop x direction if hitting a tile
                     pVel.x = 0;
                 }

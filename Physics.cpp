@@ -42,3 +42,15 @@ bool Physics::isCollision(const std::shared_ptr<Entity> a,const std::shared_ptr<
 	return(p1.x < p2.x + s2.x && p2.x < p1.x + s1.x &&
 		p1.y < p2.y + s2.y && p2.y < p1.y + s1.y);
 }
+
+// This function checks if any point of the bullet Bounding Box is and entity
+bool Physics::isPointCollision(const std::shared_ptr<Entity> a, const std::shared_ptr<Entity> b) const
+{
+	// check if location of the bullet (b) is inside entity (e)
+	auto bPos = b->getComponent<CTransform>().pos;
+	auto aPos = a->getComponent<CTransform>().pos;
+	auto aLen = a->getComponent<CBoundingBox>().halfSize;
+
+	return ((bPos.x > aPos.x - aLen.x && bPos.x < aPos.x + aLen.x) &&
+		    (bPos.y > aPos.y - aLen.y && bPos.y < aPos.y + aLen.y));
+}
