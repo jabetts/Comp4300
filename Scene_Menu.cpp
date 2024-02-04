@@ -92,7 +92,8 @@ void Scene_Menu::sDoAction(const Action& action)
 		else if (action.name() == "PLAY")
 		{
 			if (m_menuIndex == m_menuStrings.size() - 1) { onEnd(); }
-			m_game->changeScene("play", std::make_shared<Scene_Play>(m_game, m_levelPaths[m_selectedMenuIndex]));
+			m_game->changeScene("play", std::make_shared<Scene_Play>(m_game, m_levelPaths[m_menuIndex]));
+			std::cout << "playing " << m_levelPaths[m_menuIndex] << std::endl;
 		}
 		if (action.name() == "QUIT")
 		{
