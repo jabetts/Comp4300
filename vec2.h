@@ -27,4 +27,5 @@ struct Vec2
 	float dist(const Vec2& rhs) const;
 	float length() const;
 	float dot(Vec2 & rhs);
+	float crossProduct(const Vec2& rhs) const;
 };

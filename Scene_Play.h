@@ -15,6 +15,8 @@ class Scene_Play : public Scene
 		std::string WEAPON;
 	};
 
+	struct Intersect { bool result; Vec2 pos; float t; };
+
 protected:
 
 	std::shared_ptr<Entity>		m_player;
@@ -26,6 +28,7 @@ protected:
 	bool						m_collisions = true;
 	bool						m_debugFlag = false;
 	bool						m_losFlag = false;
+	bool						m_drawLOS = true;
 	Vec2						m_gridSize = {64, 64};
 	sf::Text					m_gridText;
 	sf::Text                    m_debugText;
@@ -43,12 +46,16 @@ protected:
 	void sLifeSpan();
 	void sDebug();
 	void sDrag();
+	void sLOS();
 	Vec2 gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity);
 	Vec2 windowToWorld(const Vec2& window) const;
+	void calcLOS(std::shared_ptr<Entity> p, std::shared_ptr<Entity> e);
+	Intersect lineIntersect(Vec2 a, Vec2 b, Vec2 c, Vec2 d);
 
 	void spawnPlayer();
 	void spawnBullet(std::shared_ptr<Entity> entity);
 	void drawLine(sf::Vector2f v1, sf::Vector2f v2);
+
 
 	float width() const;
 

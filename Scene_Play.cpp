@@ -141,6 +141,37 @@ Vec2 Scene_Play::windowToWorld(const Vec2& window) const
     return Vec2(window.x + wx, window.y + wy);
 }
 
+void Scene_Play::calcLOS(std::shared_ptr<Entity> p, std::shared_ptr<Entity> e)
+{
+    auto pt = p->getComponent<CTransform>().pos;
+    auto et = e->getComponent<CTransform>().pos;
+    auto bx = e->getComponent<CBoundingBox>().halfSize.x;
+    auto by = e->getComponent<CBoundingBox>().halfSize.y;
+    
+    // Top left
+    drawLine({ pt.x, pt.y }, { et.x - bx, et.y - by });
+    drawLine({ pt.x, pt.y }, { et.x + bx, et.y - by });
+    drawLine({ pt.x, pt.y }, { et.x - bx, et.y + by });
+    drawLine({ pt.x, pt.y }, { et.x + bx, et.y + by });
+}
+
+// a is ray origin, b is light target, c is line segment start, d is line segment end
+Scene_Play::Intersect Scene_Play::lineIntersect(Vec2 a, Vec2 b, Vec2 c, Vec2 d)
+{
+    
+    Vec2 r = (b - a);
+    Vec2 s = (d - c);
+    float rxs = r.crossProduct(s);
+    Vec2 cma = c - a;
+    float t = (cma.crossProduct(s)) / rxs;
+    float u = (cma.crossProduct(r)) / rxs;
+
+    if (t >=0 && t <= 1 && u >= 0 && u <=1)
+        return { true, Vec2(a.x + t*r.x, a.y + t*r.y), t };
+    else
+        return { false, Vec2(0,0), t };
+}
+
 void Scene_Play::spawnPlayer()
 {
     m_player = m_entityManager.addEntity("Player");
@@ -174,6 +205,7 @@ void Scene_Play::update()
         sMovement();
         sLifeSpan();
         sCollision();
+        //sLOS();
         sAnimation();
         sDrag();
     }
@@ -689,6 +721,17 @@ void Scene_Play::sRender()
                 rect.setOutlineColor(sf::Color(255, 255, 255, 255));
                 rect.setOutlineThickness(1);
                 m_game->window().draw(rect);
+
+                if (m_drawLOS)
+                {
+                    sLOS();
+                }
+            }
+
+            // LOS code??
+            if (e->hasComponent<CAnimation>())
+            {
+                auto& a = e->getComponent<CAnimation>().animation.getSprite();
             }
         }
     }
@@ -759,6 +802,63 @@ void Scene_Play::sDrag()
                 << " [" << m_mPos.x << "][" << m_mPos.y <<"]" << std::endl;
         }
     }
+}
+
+void Scene_Play::sLOS()
+{
+    auto pos = m_player->getComponent<CTransform>().pos;
+    Vec2 rpos(pos.x + 550, 0);
+
+    float distance = 10000000;
+    Intersect dist;
+    Vec2 closestPoint = rpos;
+    sf::CircleShape shape(6.f, 8);
+    shape.setFillColor(sf::Color::Red);
+    shape.setOrigin(6.f, 6.f);
+
+
+    for (auto& e : m_entityManager.getEntities("Tile"))
+    {
+        // loop through line segments of each entity and
+        // check for a collision.
+        // draw the line to the collision, or to the top of the screen
+        sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
+        Intersect lines[4];
+        lines[0] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top}, {r.left + r.width, r.top});
+        lines[1] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top}, {r.left, r.top + r.height});
+        lines[2] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top + r.height}, {r.left + r.width, r.top + r.height});
+        lines[3] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top}, {r.left + r.width, r.top});
+        
+        // work out which is closest to the player
+        float intersect = 2.0;
+        int lowest = -1;
+        if (lines[0].result || lines[1].result || lines[2].result || lines[3].result)
+        {
+            
+            for (int i = 0; i < 4; i++)
+            {
+                if (lines[i].result && lines[i].t < intersect)
+                {
+                    intersect = lines[i].t;
+                    lowest = i;
+                }
+            }
+        }
+        else
+        {
+            continue;
+        }
+
+        float tempDist = pos.distSq(lines[lowest].pos);
+        if (tempDist < distance)
+        {
+            distance = tempDist;
+            closestPoint = lines[lowest].pos;
+        }
+    }
+    drawLine({ pos.x, pos.y }, { closestPoint.x, closestPoint.y });
+    shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
+    m_game->window().draw(shape);
 }
 
 void Scene_Play::sEnemySpawner()

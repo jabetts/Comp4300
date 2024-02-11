@@ -88,3 +88,8 @@ float Vec2::dot(Vec2 & rhs)
 {
 	return (x * rhs.x + y * rhs.y);
 }
+
+float Vec2::crossProduct(const Vec2& rhs) const
+{
+	return (x * rhs.y - y * rhs.x);
+}

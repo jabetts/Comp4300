@@ -160,6 +160,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Scene_Menu.cpp" />
     <ClCompile Include="Scene_Play.cpp" />
+    <ClCompile Include="Scene_Wolf3d.cpp" />
     <ClCompile Include="vec2.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +177,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Scene_Menu.h" />
     <ClInclude Include="Scene_Play.h" />
+    <ClInclude Include="Scene_Wolf3d.h" />
     <ClInclude Include="vec2.h" />
   </ItemGroup>
   <ItemGroup>
