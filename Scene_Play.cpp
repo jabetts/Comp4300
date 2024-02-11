@@ -4,6 +4,7 @@
 #include "GameEngine.h"
 #include "components.h"
 #include "Action.h"
+#include "RayCast.h"
 
 #include <iostream>
 #include <memory>
@@ -155,7 +156,7 @@ void Scene_Play::calcLOS(std::shared_ptr<Entity> p, std::shared_ptr<Entity> e)
     drawLine({ pt.x, pt.y }, { et.x + bx, et.y + by });
 }
 
-// a is ray origin, b is light target, c is line segment start, d is line segment end
+// a is ray origin, b is line target, c is line segment start, d is line segment end
 Scene_Play::Intersect Scene_Play::lineIntersect(Vec2 a, Vec2 b, Vec2 c, Vec2 d)
 {
     
@@ -722,10 +723,7 @@ void Scene_Play::sRender()
                 rect.setOutlineThickness(1);
                 m_game->window().draw(rect);
 
-                if (m_drawLOS)
-                {
-                    sLOS();
-                }
+                
             }
 
             // LOS code??
@@ -734,6 +732,11 @@ void Scene_Play::sRender()
                 auto& a = e->getComponent<CAnimation>().animation.getSprite();
             }
         }
+    }
+
+    if (m_drawLOS && m_drawCollision)
+    {
+        sLOS();
     }
 
     // draw the grid so that students can easily debug
@@ -807,16 +810,90 @@ void Scene_Play::sDrag()
 void Scene_Play::sLOS()
 {
     auto pos = m_player->getComponent<CTransform>().pos;
-    Vec2 rpos(pos.x + 550, 0);
+    Vec2 rpos(pos.x, 0);
 
     float distance = 10000000;
     Intersect dist;
-    Vec2 closestPoint = rpos;
+    
     sf::CircleShape shape(6.f, 8);
     shape.setFillColor(sf::Color::Red);
     shape.setOrigin(6.f, 6.f);
 
+    // TODO: Need to shoot a ray at each point in all entities
+    //       The loop through all entities and get the closest interection
+    //       for that ray.
 
+    auto playerPos = m_player->getComponent<CTransform>().pos;
+
+    float angle = 180;
+    float step = 360 / 100;
+    float rads = 0;
+    int lowest = -1;
+    int length = 1000;
+
+    // lets start by casting 50 rays
+    for (size_t i = 0; i <= 100; i++)
+    {
+        rads = angle * 3.14f / 180.0f;
+        rpos.x = pos.x + length * std::cos(rads);
+        rpos.y = pos.y + length * std::sin(rads);
+        Vec2 closestPoint = rpos;
+        distance = 10000000;
+
+        // For each entity, check the ray against each edge.
+        for (auto& e : m_entityManager.getEntities("Tile"))
+        {
+            // loop through line segments of each entity and
+            // check for a collision.
+            // draw the line to the collision, or to the top of the screen
+
+            sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
+
+            // each edge of the entity
+            //rpos = e->getComponent<CTransform>().pos;
+            Intersect lines[4];
+            lines[0] = lineIntersect({ pos.x, pos.y }, rpos, { r.left, r.top }, { r.left + r.width, r.top });
+            lines[1] = lineIntersect({ pos.x, pos.y }, rpos, { r.left, r.top }, { r.left, r.top + r.height });
+            lines[2] = lineIntersect({ pos.x, pos.y }, rpos, { r.left, r.top + r.height }, { r.left + r.width, r.top + r.height });
+            lines[3] = lineIntersect({ pos.x, pos.y }, rpos, { r.left + r.width, r.top }, { r.left + r.width, r.top + r.height });
+
+            // work out which intersect is closest to the player if it intersects
+            float intersect = 2.0;
+            
+            if (lines[0].result || lines[1].result || lines[2].result || lines[3].result)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (lines[i].result && std::abs(lines[i].t) < intersect)
+                    {
+                        intersect = lines[i].t;
+                        lowest = i;
+                    }
+                }
+            }
+            else
+            {
+                continue;
+            }
+            float tempDist = std::abs(pos.distSq(lines[lowest].pos));
+            if (tempDist < distance)
+            {
+                distance = tempDist;
+                closestPoint = lines[lowest].pos;
+            }
+        }
+
+        angle += step;
+
+        drawLine({ pos.x, pos.y }, { closestPoint.x, closestPoint.y });
+        shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
+        m_game->window().draw(shape);
+    }
+    
+    
+    
+
+    /*
     for (auto& e : m_entityManager.getEntities("Tile"))
     {
         // loop through line segments of each entity and
@@ -859,6 +936,7 @@ void Scene_Play::sLOS()
     drawLine({ pos.x, pos.y }, { closestPoint.x, closestPoint.y });
     shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
     m_game->window().draw(shape);
+    */
 }
 
 void Scene_Play::sEnemySpawner()
