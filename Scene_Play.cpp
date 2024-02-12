@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <array>
 
 Scene_Play::Scene_Play(GameEngine* gameEngine, const std::string& levelPath)
     : Scene(gameEngine), m_levelPath(levelPath)
@@ -735,18 +736,7 @@ void Scene_Play::sRender()
 
                 
             }
-
-            // LOS code??
-            if (e->hasComponent<CAnimation>())
-            {
-                auto& a = e->getComponent<CAnimation>().animation.getSprite();
-            }
         }
-    }
-
-    if (m_drawLOS && m_drawCollision)
-    {
-        sLOS();
     }
 
     sLos();
@@ -772,7 +762,7 @@ void Scene_Play::sRender()
                 }
                 drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
                 std::string xCell = std::to_string((int)x / (int)m_gridSize.x);
-                std::string yCell = std::to_string((int)(height() - (int)y) / (int)m_gridSize.y);
+                std::string yCell = std::to_string((int)(height() - ((int)y) - 1) / (int)m_gridSize.y);
                 m_gridText.setString("(" + xCell + "," + yCell + ")");
                 m_gridText.setPosition(x + 3, y + 2);
                 m_game->window().draw(m_gridText);
@@ -834,6 +824,19 @@ void Scene_Play::sDrag()
     }
 }
 
+// TODO: Shoot a ray 0.00001 radians to each side of the rays being cae at each entity point
+//       we can later use this to get true raycasted line of sight and use it to draw shadows
+//       in the non seen areas.
+std::array<Vec2, 4> getTileCorners(std::array<Vec2, 4> a, const sf::FloatRect& rect)
+{
+    a[0] = { rect.left, rect.top };
+    a[1] = { rect.left, rect.top + rect.height };
+    a[2] = { rect.left + rect.width, rect.top + rect.height };
+    a[3] = { rect.left + rect.width, rect.top };
+
+    return a;
+}
+
 void Scene_Play::sLos()
 {
     Vec2 playerPos = m_player->getComponent<CTransform>().pos;
@@ -844,6 +847,11 @@ void Scene_Play::sLos()
     shape.setFillColor(sf::Color::Red);
     shape.setOrigin(6.f, 6.f);
 
+    sf::View view = m_game->window().getView();
+    sf::Vector2f viewcenter = view.getCenter();
+    sf::Vector2f viewSize = view.getSize();
+    Vec2 viewPos(viewcenter.x - (viewSize.x / 2), viewcenter.y - (viewSize.y / 2));
+
     // First loop through all entities that we want to fire rays at each point
     for (auto& e : m_entityManager.getEntities("Tile"))
     {
@@ -852,10 +860,11 @@ void Scene_Play::sLos()
         Vec2 playerPos = m_player->getComponent<CTransform>().pos;
         Vec2 entityPos = e->getComponent<CTransform>().pos;
         float distance = playerPos.dist(entityPos);
-
+        constexpr size_t SIGHT_LIMIT = 1000;
+        
         int intersectDist = 1000000;
         
-        if (distance < 500) // TODO: Change this to the DistanceLimit
+        if (distance < SIGHT_LIMIT) // TODO: Change this to the DistanceLimit
         {
             // Shoot a ray at each of the tiles points, then loop through
             // all entities within the Distance limit and find the closest
@@ -876,21 +885,24 @@ void Scene_Play::sLos()
             {
                 Vec2 closestPoint = rays[i];
 
-                intersectDist = 100000;
+                intersectDist = SIGHT_LIMIT + 1;
                 for (auto& e : m_entityManager.getEntities("Tile"))
                 {
                     Vec2 entityPos = e->getComponent<CTransform>().pos;
                     float distance = playerPos.dist(entityPos);
 
-                    if (distance < 500)
+                    if (distance < SIGHT_LIMIT)
                     {
+                        // TODO: Shoot a ray slightly to each side of each entities point.
                         sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
+                        std::array<Vec2, 4> corners;
+                        corners = getTileCorners(corners, r);
 
                         Intersect lines[4];
-                        lines[0] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left, r.top}, {r.left + r.width, r.top});
-                        lines[1] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left, r.top}, {r.left, r.top + r.height});
-                        lines[2] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left, r.top + r.height}, {r.left + r.width, r.top + r.height});
-                        lines[3] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left + r.width, r.top}, {r.left + r.width, r.top + r.height});
+                        lines[0] = lineIntersect(playerPos, rays[i], {r.left, r.top}, {r.left + r.width, r.top});
+                        lines[1] = lineIntersect(playerPos, rays[i], corners[0], {r.left, r.top + r.height});
+                        lines[2] = lineIntersect(playerPos, rays[i], {r.left, r.top + r.height}, {r.left + r.width, r.top + r.height});
+                        lines[3] = lineIntersect(playerPos, rays[i], {r.left + r.width, r.top}, {r.left + r.width, r.top + r.height});
 
                         // work out which intersect is closest to the player if it intersects
                         float intersect = 2.0;
@@ -918,15 +930,19 @@ void Scene_Play::sLos()
                         }
                     }
                 }
-                drawLine({ playerPos.x, playerPos.y }, { closestPoint.x, closestPoint.y });
-                shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
-                m_game->window().draw(shape);
+                if (m_drawCollision) 
+                {
+                    drawLine({ playerPos.x, playerPos.y }, { closestPoint.x, closestPoint.y });
+                    shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
+                    m_game->window().draw(shape);
+                }
             }   
         }
     }
 }
 
-void Scene_Play::sLOS()
+// This L.O.S system fires rays radially in all directions up to n distance.
+void Scene_Play::sRadialLOS()
 {
     auto pos = m_player->getComponent<CTransform>().pos;
     Vec2 rpos(0, 0); // ray destination
@@ -937,13 +953,6 @@ void Scene_Play::sLOS()
     sf::CircleShape shape(6.f, 8);
     shape.setFillColor(sf::Color::Red);
     shape.setOrigin(6.f, 6.f);
-
-    // TODO: At the moment this just shoots rays in all directions and
-    //       interect tests are conducted on ALL entities in the level.
-    //       Need to come up with a data structure to only fire rays
-    //       at entities that are within the screen view of the player
-    //       need to do a tile distance check using the tile grid prior
-    //       to firing rays. Also need to include window boundary lines
 
     float angle = 180;
     float step = 360 / 100;
@@ -966,7 +975,6 @@ void Scene_Play::sLOS()
             sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
 
             // each edge of the entity
-            //rpos = e->getComponent<CTransform>().pos;
             Intersect lines[4];
             lines[0] = lineIntersect({ pos.x, pos.y }, rpos, { r.left, r.top }, { r.left + r.width, r.top });
             lines[1] = lineIntersect({ pos.x, pos.y }, rpos, { r.left, r.top }, { r.left, r.top + r.height });

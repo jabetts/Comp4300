@@ -46,8 +46,8 @@ protected:
 	void sLifeSpan();
 	void sDebug();
 	void sDrag();
-	void sLOS();
-	void sLos(); // improved version
+	void sRadialLOS();
+	void sLos();       // improved version of LOS
 	Vec2 gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity);
 	Vec2 pixelToGrid(Vec2 pos);
 	Vec2 windowToWorld(const Vec2& window) const;
