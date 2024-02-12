@@ -47,7 +47,9 @@ protected:
 	void sDebug();
 	void sDrag();
 	void sLOS();
+	void sLos(); // improved version
 	Vec2 gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity);
+	Vec2 pixelToGrid(Vec2 pos);
 	Vec2 windowToWorld(const Vec2& window) const;
 	void calcLOS(std::shared_ptr<Entity> p, std::shared_ptr<Entity> e);
 	Intersect lineIntersect(Vec2 a, Vec2 b, Vec2 c, Vec2 d);

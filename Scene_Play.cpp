@@ -132,6 +132,13 @@ Vec2 Scene_Play::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity
     return Vec2(pixelX, pixelY);
 }
 
+Vec2 Scene_Play::pixelToGrid(Vec2 pos)
+{
+    float x = pos.x / (float)m_gridSize.x;
+    float y = (height() - pos.y) / m_gridSize.y;
+    return Vec2(x,y);
+}
+
 Vec2 Scene_Play::windowToWorld(const Vec2& window) const
 {
     auto& view = m_game->window().getView();
@@ -685,12 +692,14 @@ void Scene_Play::sRender()
     sf::View view = m_game->window().getView();
     view.setCenter(windowCenterX, m_game->window().getSize().y - view.getCenter().y);
     m_game->window().setView(view);
+    sf::View ui = m_game->window().getDefaultView();
 
     // draw all Entity textures / animations
     if (m_drawTextures)
     {
         for (auto e : m_entityManager.getEntities())
         {
+           
             auto& transform = e->getComponent<CTransform>();
 
             if (e->hasComponent<CAnimation>())
@@ -702,6 +711,7 @@ void Scene_Play::sRender()
                 m_game->window().draw(animation.getSprite());
 
             }
+            
         }
     }
 
@@ -739,6 +749,8 @@ void Scene_Play::sRender()
         sLOS();
     }
 
+    sLos();
+
     // draw the grid so that students can easily debug
     if (m_drawGrid)
     {   
@@ -760,7 +772,7 @@ void Scene_Play::sRender()
                 }
                 drawLine(sf::Vector2f(leftX, height() - y), sf::Vector2f(rightX, height() - y));
                 std::string xCell = std::to_string((int)x / (int)m_gridSize.x);
-                std::string yCell = std::to_string((int)y / (int)m_gridSize.y);
+                std::string yCell = std::to_string((int)(height() - (int)y) / (int)m_gridSize.y);
                 m_gridText.setString("(" + xCell + "," + yCell + ")");
                 m_gridText.setPosition(x + 3, y + 2);
                 m_game->window().draw(m_gridText);
@@ -784,7 +796,22 @@ void Scene_Play::sRender()
         m_game->window().draw(shape);
         m_game->window().draw(m_debugText);
     }
-    
+
+    // Draw UI stuff
+    m_game->window().setView(ui);
+    Vec2 playerGrid(m_player->getComponent<CTransform>().pos);
+    playerGrid = pixelToGrid(playerGrid);
+    std::stringstream ss;
+    ss << "grid x: " << (int)playerGrid.x << " " << "grid y: " << (int)playerGrid.y << "\n" <<
+        "pos x:" << m_player->getComponent<CTransform>().pos.x << "\n";
+    m_debugString = ss.str();
+    m_debugText.setString(m_debugString);
+    m_debugText.setPosition(10, 5);
+    m_debugText.setCharacterSize(30);
+
+    m_game->window().draw(m_debugText);
+
+
     m_game->window().display();
     m_currentFrame++;
 }
@@ -807,10 +834,102 @@ void Scene_Play::sDrag()
     }
 }
 
+void Scene_Play::sLos()
+{
+    Vec2 playerPos = m_player->getComponent<CTransform>().pos;
+    Vec2 rayTarget(0, 0);
+    Vec2 playerTilePos;
+    float DistanceLimit = width() - (width() / 8);
+    sf::CircleShape shape(6.f, 8);
+    shape.setFillColor(sf::Color::Red);
+    shape.setOrigin(6.f, 6.f);
+
+    // First loop through all entities that we want to fire rays at each point
+    for (auto& e : m_entityManager.getEntities("Tile"))
+    {
+        // first test if the tile is outside our bounds limit
+        // using the players, and tiles grid position.
+        Vec2 playerPos = m_player->getComponent<CTransform>().pos;
+        Vec2 entityPos = e->getComponent<CTransform>().pos;
+        float distance = playerPos.dist(entityPos);
+
+        int intersectDist = 1000000;
+        
+        if (distance < 500) // TODO: Change this to the DistanceLimit
+        {
+            // Shoot a ray at each of the tiles points, then loop through
+            // all entities within the Distance limit and find the closest
+            // insterect for each ray
+
+            Vec2 rays[4] = { };
+            sf::FloatRect rect = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
+
+            rays[0] = { rect.left, rect.top }; // Top left
+            rays[1] = { rect.left, rect.top + rect.height }; // Bottom left
+            rays[2] = { rect.left + rect.width, rect.top + rect.height }; // bottom right
+            rays[3] = { rect.left + rect.width, rect.top }; // top right
+
+            // Check intersections for each ray for entities within the bounds
+            int lowest = 2;
+            
+            for (size_t i = 0; i < 4; i++)
+            {
+                Vec2 closestPoint = rays[i];
+
+                intersectDist = 100000;
+                for (auto& e : m_entityManager.getEntities("Tile"))
+                {
+                    Vec2 entityPos = e->getComponent<CTransform>().pos;
+                    float distance = playerPos.dist(entityPos);
+
+                    if (distance < 500)
+                    {
+                        sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
+
+                        Intersect lines[4];
+                        lines[0] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left, r.top}, {r.left + r.width, r.top});
+                        lines[1] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left, r.top}, {r.left, r.top + r.height});
+                        lines[2] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left, r.top + r.height}, {r.left + r.width, r.top + r.height});
+                        lines[3] = lineIntersect({ playerPos.x, playerPos.y }, rays[i], {r.left + r.width, r.top}, {r.left + r.width, r.top + r.height});
+
+                        // work out which intersect is closest to the player if it intersects
+                        float intersect = 2.0;
+
+                        if (lines[0].result || lines[1].result || lines[2].result || lines[3].result)
+                        {
+                            for (int i = 0; i < 4; i++)
+                            {
+                                if (lines[i].result && std::abs(lines[i].t) < intersect)
+                                {
+                                    intersect = lines[i].t;
+                                    lowest = i;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        float tempDist = std::abs(playerPos.dist(lines[lowest].pos));
+                        if (tempDist < intersectDist)
+                        {
+                            intersectDist = tempDist;
+                            closestPoint = lines[lowest].pos;
+                        }
+                    }
+                }
+                drawLine({ playerPos.x, playerPos.y }, { closestPoint.x, closestPoint.y });
+                shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
+                m_game->window().draw(shape);
+            }   
+        }
+    }
+}
+
 void Scene_Play::sLOS()
 {
     auto pos = m_player->getComponent<CTransform>().pos;
-    Vec2 rpos(pos.x, 0);
+    Vec2 rpos(0, 0); // ray destination
 
     float distance = 10000000;
     Intersect dist;
@@ -819,11 +938,12 @@ void Scene_Play::sLOS()
     shape.setFillColor(sf::Color::Red);
     shape.setOrigin(6.f, 6.f);
 
-    // TODO: Need to shoot a ray at each point in all entities
-    //       The loop through all entities and get the closest interection
-    //       for that ray.
-
-    auto playerPos = m_player->getComponent<CTransform>().pos;
+    // TODO: At the moment this just shoots rays in all directions and
+    //       interect tests are conducted on ALL entities in the level.
+    //       Need to come up with a data structure to only fire rays
+    //       at entities that are within the screen view of the player
+    //       need to do a tile distance check using the tile grid prior
+    //       to firing rays. Also need to include window boundary lines
 
     float angle = 180;
     float step = 360 / 100;
@@ -832,7 +952,7 @@ void Scene_Play::sLOS()
     int length = 1000;
 
     // lets start by casting 50 rays
-    for (size_t i = 0; i <= 100; i++)
+    for (size_t i = 0; i < 120; i++)
     {
         rads = angle * 3.14f / 180.0f;
         rpos.x = pos.x + length * std::cos(rads);
@@ -843,10 +963,6 @@ void Scene_Play::sLOS()
         // For each entity, check the ray against each edge.
         for (auto& e : m_entityManager.getEntities("Tile"))
         {
-            // loop through line segments of each entity and
-            // check for a collision.
-            // draw the line to the collision, or to the top of the screen
-
             sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
 
             // each edge of the entity
@@ -882,61 +998,15 @@ void Scene_Play::sLOS()
                 closestPoint = lines[lowest].pos;
             }
         }
-
         angle += step;
 
-        drawLine({ pos.x, pos.y }, { closestPoint.x, closestPoint.y });
-        shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
-        m_game->window().draw(shape);
-    }
-    
-    
-    
-
-    /*
-    for (auto& e : m_entityManager.getEntities("Tile"))
-    {
-        // loop through line segments of each entity and
-        // check for a collision.
-        // draw the line to the collision, or to the top of the screen
-        sf::FloatRect r = e->getComponent<CAnimation>().animation.getSprite().getGlobalBounds();
-        Intersect lines[4];
-        lines[0] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top}, {r.left + r.width, r.top});
-        lines[1] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top}, {r.left, r.top + r.height});
-        lines[2] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top + r.height}, {r.left + r.width, r.top + r.height});
-        lines[3] = lineIntersect({pos.x, pos.y}, rpos, {r.left, r.top}, {r.left + r.width, r.top});
-        
-        // work out which is closest to the player
-        float intersect = 2.0;
-        int lowest = -1;
-        if (lines[0].result || lines[1].result || lines[2].result || lines[3].result)
+        if (m_drawCollision)
         {
-            
-            for (int i = 0; i < 4; i++)
-            {
-                if (lines[i].result && lines[i].t < intersect)
-                {
-                    intersect = lines[i].t;
-                    lowest = i;
-                }
-            }
-        }
-        else
-        {
-            continue;
-        }
-
-        float tempDist = pos.distSq(lines[lowest].pos);
-        if (tempDist < distance)
-        {
-            distance = tempDist;
-            closestPoint = lines[lowest].pos;
+            drawLine({ pos.x, pos.y }, { closestPoint.x, closestPoint.y });
+            shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
+            m_game->window().draw(shape);
         }
     }
-    drawLine({ pos.x, pos.y }, { closestPoint.x, closestPoint.y });
-    shape.setPosition(sf::Vector2f(closestPoint.x, closestPoint.y));
-    m_game->window().draw(shape);
-    */
 }
 
 void Scene_Play::sEnemySpawner()
